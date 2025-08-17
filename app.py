@@ -271,6 +271,8 @@ app.layout = dbc.Container([
                                             dcc.Dropdown(
                                                 id="screening-strategy",
                                                 options=[
+                                                    # 高频数据挖掘策略（充分利用有限数据）
+                                                    {'label': '🔍 高频数据挖掘(深度分析)', 'value': 'high_frequency_mining'},
                                                     # 短期优化策略（适应有限数据）
                                                     {'label': '⚡ 短期均线交叉(3/8日)', 'value': 'short_term_ma'},
                                                     {'label': '⚡ 短期KDJ+MACD(5/10日)', 'value': 'short_term_kdj_macd'},
@@ -1001,6 +1003,40 @@ def start_stock_screening(n_clicks, strategy_type, min_price, max_price,
                 min_price=min_price or 5.0,
                 max_price=max_price or 100.0
             )
+        elif strategy_type == 'high_frequency_mining':
+            # 使用高频数据挖掘策略
+            from src.strategies.high_frequency_strategies import HighFrequencyDataMiner
+            miner = HighFrequencyDataMiner(data_provider)
+            
+            # 对每只股票进行深度数据挖掘
+            results = []
+            for stock_code in sample_stocks[:20]:  # 限制数量，深度分析
+                try:
+                    mined_data = miner.mine_comprehensive_data(stock_code)
+                    if mined_data and mined_data.get('signals'):
+                        # 转换为标准格式
+                        results.append({
+                            'code': stock_code,
+                            'name': stock_code,  # 简化处理
+                            'price': mined_data['enhanced_data']['close'].iloc[-1] if 'enhanced_data' in mined_data else 0,
+                            'strategy': '高频数据挖掘',
+                            'signal': '深度分析完成',
+                            'data_points': mined_data.get('data_points', 0),
+                            'signals_count': len(mined_data.get('signals', [])),
+                            'patterns_found': len(mined_data.get('patterns', {}).get('price', [])) + len(mined_data.get('patterns', {}).get('volume', [])),
+                            'indicators_count': len(mined_data.get('indicators', {})),
+                            'analysis_summary': self._generate_analysis_summary(mined_data)
+                        })
+                except Exception as e:
+                    self.logger.warning(f"高频挖掘失败 {stock_code}: {e}")
+                    continue
+            
+            if not results:
+                return (
+                    dbc.Alert("⚠️ 高频数据挖掘未找到符合条件的股票", color="warning", className="mb-0"),
+                    html.P("请尝试调整参数或选择其他策略")
+                )
+        
         elif strategy_type == 'dual_strategy':
             results = screener.screen_by_dual_strategy(
                 sample_stocks,
