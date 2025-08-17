@@ -24,8 +24,8 @@ class StockScreener:
     
     def screen_by_ma_cross(self, 
                            stock_list: List[str], 
-                           short_window: int = 5,
-                           long_window: int = 20,
+                           short_window: int = 3,  # 优化：从5改为3，适应短期数据
+                           long_window: int = 10,  # 优化：从20改为10，适应短期数据
                            min_price: float = 5.0,
                            max_price: float = 100.0) -> List[Dict]:
         """
@@ -90,12 +90,12 @@ class StockScreener:
     
     def screen_by_kdj_macd(self, 
                            stock_list: List[str],
-                           kdj_n: int = 9,
-                           kdj_m1: int = 3,
-                           kdj_m2: int = 3,
-                           macd_fast: int = 12,
-                           macd_slow: int = 26,
-                           macd_signal: int = 9,
+                           kdj_n: int = 5,      # 优化：从9改为5，适应短期数据
+                           kdj_m1: int = 2,     # 优化：从3改为2，提高灵敏度
+                           kdj_m2: int = 2,     # 优化：从3改为2，提高灵敏度
+                           macd_fast: int = 6,  # 优化：从12改为6，适应短期数据
+                           macd_slow: int = 13, # 优化：从26改为13，适应短期数据
+                           macd_signal: int = 5, # 优化：从9改为5，适应短期数据
                            min_price: float = 5.0,
                            max_price: float = 100.0) -> List[Dict]:
         """
@@ -179,8 +179,8 @@ class StockScreener:
     
     def screen_by_volume_breakout(self, 
                                   stock_list: List[str],
-                                  volume_ratio: float = 2.0,
-                                  price_change: float = 0.05,
+                                  volume_ratio: float = 1.5,  # 优化：从2.0改为1.5，降低门槛
+                                  price_change: float = 0.03,  # 优化：从0.05改为0.03，降低门槛
                                   min_price: float = 5.0,
                                   max_price: float = 100.0) -> List[Dict]:
         """
@@ -251,8 +251,8 @@ class StockScreener:
     
     def screen_by_rsi_oversold(self, 
                                stock_list: List[str],
-                               rsi_period: int = 14,
-                               rsi_threshold: float = 30.0,
+                               rsi_period: int = 7,      # 优化：从14改为7，适应短期数据
+                               rsi_threshold: float = 35.0,  # 优化：从30.0改为35.0，降低门槛
                                min_price: float = 5.0,
                                max_price: float = 100.0) -> List[Dict]:
         """
@@ -315,8 +315,8 @@ class StockScreener:
     
     def screen_by_bollinger_bands(self, 
                                   stock_list: List[str],
-                                  bb_period: int = 20,
-                                  bb_std: float = 2.0,
+                                  bb_period: int = 10,    # 优化：从20改为10，适应短期数据
+                                  bb_std: float = 1.8,    # 优化：从2.0改为1.8，降低门槛
                                   min_price: float = 5.0,
                                   max_price: float = 100.0) -> List[Dict]:
         """
@@ -384,8 +384,8 @@ class StockScreener:
     
     def screen_by_momentum(self, 
                            stock_list: List[str],
-                           momentum_period: int = 10,
-                           momentum_threshold: float = 0.05,
+                           momentum_period: int = 5,      # 优化：从10改为5，适应短期数据
+                           momentum_threshold: float = 0.03,  # 优化：从0.05改为0.03，降低门槛
                            min_price: float = 5.0,
                            max_price: float = 100.0) -> List[Dict]:
         """

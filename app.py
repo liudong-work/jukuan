@@ -271,6 +271,11 @@ app.layout = dbc.Container([
                                             dcc.Dropdown(
                                                 id="screening-strategy",
                                                 options=[
+                                                    # 短期优化策略（适应有限数据）
+                                                    {'label': '⚡ 短期均线交叉(3/8日)', 'value': 'short_term_ma'},
+                                                    {'label': '⚡ 短期KDJ+MACD(5/10日)', 'value': 'short_term_kdj_macd'},
+                                                    {'label': '⚡ 短期RSI+动量(5/3日)', 'value': 'short_term_rsi_momentum'},
+                                                    # 传统策略
                                                     {'label': '📈 均线交叉策略', 'value': 'ma_cross'},
                                                     {'label': '🎯 KDJ+MACD双重金叉', 'value': 'kdj_macd'},
                                                     {'label': '📊 放量突破策略', 'value': 'volume_breakout'},
@@ -282,7 +287,7 @@ app.layout = dbc.Container([
                                                     {'label': '⭐ 高级复合选股策略', 'value': 'advanced_conditions'},
                                                     {'label': '🎛️ 灵活选股策略', 'value': 'flexible_screening'}
                                                 ],
-                                                value='ma_cross',
+                                                value='short_term_ma',  # 默认使用短期策略
                                                 placeholder="选择选股策略",
                                                 className="mb-3"
                                             )
@@ -930,12 +935,12 @@ def start_stock_screening(n_clicks, strategy_type, min_price, max_price,
             '600036.XSHG', '600519.XSHG', '000858.XSHE', '002415.XSHE', '000725.XSHE'
         ]
         
-        # 根据策略类型执行选股
+        # 根据策略类型执行选股（优化参数适应短期数据）
         if strategy_type == 'ma_cross':
             results = screener.screen_by_ma_cross(
                 sample_stocks, 
-                short_window=5, 
-                long_window=20,
+                short_window=3,  # 优化：适应短期数据
+                long_window=10,  # 优化：适应短期数据
                 min_price=min_price or 5.0,
                 max_price=max_price or 100.0
             )
@@ -965,6 +970,33 @@ def start_stock_screening(n_clicks, strategy_type, min_price, max_price,
             )
         elif strategy_type == 'momentum':
             results = screener.screen_by_momentum(
+                sample_stocks,
+                min_price=min_price or 5.0,
+                max_price=max_price or 100.0
+            )
+        elif strategy_type == 'short_term_ma':
+            # 使用短期优化策略
+            from src.strategies.short_term_strategies import ShortTermStrategies
+            short_term_screener = ShortTermStrategies(data_provider)
+            results = short_term_screener.screen_by_short_term_ma(
+                sample_stocks,
+                min_price=min_price or 5.0,
+                max_price=max_price or 100.0
+            )
+        elif strategy_type == 'short_term_kdj_macd':
+            # 使用短期优化策略
+            from src.strategies.short_term_strategies import ShortTermStrategies
+            short_term_screener = ShortTermStrategies(data_provider)
+            results = short_term_screener.screen_by_short_term_kdj_macd(
+                sample_stocks,
+                min_price=min_price or 5.0,
+                max_price=max_price or 100.0
+            )
+        elif strategy_type == 'short_term_rsi_momentum':
+            # 使用短期优化策略
+            from src.strategies.short_term_strategies import ShortTermStrategies
+            short_term_screener = ShortTermStrategies(data_provider)
+            results = short_term_screener.screen_by_rsi_momentum(
                 sample_stocks,
                 min_price=min_price or 5.0,
                 max_price=max_price or 100.0
