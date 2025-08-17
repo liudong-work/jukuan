@@ -10,11 +10,40 @@ from datetime import datetime, timedelta
 import pandas as pd
 import json
 import os
+import numpy as np
 
 from src.data.jq_data_provider import JQDataProvider
 from core.config import settings
 
 logger = logging.getLogger(__name__)
+
+class SafeJSONEncoder(json.JSONEncoder):
+    """安全的JSON编码器，处理numpy类型和特殊数值"""
+    
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return self._safe_float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif pd.isna(obj):
+            return None
+        elif isinstance(obj, (datetime, pd.Timestamp)):
+            return obj.isoformat()
+        return super().default(obj)
+    
+    def _safe_float(self, value):
+        """安全转换浮点数"""
+        try:
+            if pd.isna(value) or value == np.inf or value == -np.inf:
+                return 0.0
+            result = float(value)
+            if np.isnan(result) or np.isinf(result):
+                return 0.0
+            return result
+        except:
+            return 0.0
 
 class JQService:
     """聚宽服务类"""
@@ -86,7 +115,7 @@ class JQService:
         try:
             cache_file = self._get_cache_key(key)
             with open(cache_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+                json.dump(data, f, ensure_ascii=False, indent=2, cls=SafeJSONEncoder)
         except Exception as e:
             logger.warning(f"保存缓存失败: {e}")
     
@@ -182,15 +211,15 @@ class JQService:
                                     stock_info = {
                                         'code': stock_code,
                                         'name': self._get_stock_name(stock_code),
-                                        'current_price': latest['close'],
-                                        'open_price': latest['open'],
-                                        'high_price': latest['high'],
-                                        'low_price': latest['low'],
-                                        'prev_close': prev_close,
-                                        'change': latest['close'] - prev_close,
-                                        'change_pct': ((latest['close'] - prev_close) / prev_close) * 100 if prev_close > 0 else 0,
-                                        'volume': latest['volume'],
-                                        'amount': latest.get('amount', 0),
+                                        'current_price': self._safe_float(latest['close']),
+                                        'open_price': self._safe_float(latest['open']),
+                                        'high_price': self._safe_float(latest['high']),
+                                        'low_price': self._safe_float(latest['low']),
+                                        'prev_close': self._safe_float(prev_close),
+                                        'change': self._safe_float(latest['close'] - prev_close),
+                                        'change_pct': self._safe_float(((latest['close'] - prev_close) / prev_close) * 100 if prev_close > 0 else 0),
+                                        'volume': self._safe_float(latest['volume']),
+                                        'amount': self._safe_float(latest.get('amount', 0)),
                                         'market': self._get_market_type(stock_code),
                                         'industry': self._get_industry(stock_code),
                                         'update_time': datetime.now().isoformat(),
@@ -270,11 +299,26 @@ class JQService:
                 if stock_details:
                     stock_details.sort(key=lambda x: x['change_pct'], reverse=True)
                 
-                # 保存到缓存
-                self._save_to_cache(cache_key, stock_details)
+                # 清理数据，确保JSON兼容性
+                cleaned_stocks = []
+                for stock in stock_details:
+                    cleaned_stock = {}
+                    for key, value in stock.items():
+                        if isinstance(value, (np.integer, np.floating)):
+                            cleaned_stock[key] = self._safe_float(value)
+                        elif isinstance(value, (np.ndarray, pd.Series)):
+                            cleaned_stock[key] = value.tolist() if hasattr(value, 'tolist') else str(value)
+                        elif pd.isna(value):
+                            cleaned_stock[key] = None
+                        else:
+                            cleaned_stock[key] = value
+                    cleaned_stocks.append(cleaned_stock)
                 
-                logger.info(f"获取{market}市场股票列表: {len(stock_details)}只")
-                return stock_details
+                # 保存到缓存
+                self._save_to_cache(cache_key, cleaned_stocks)
+                
+                logger.info(f"获取{market}市场股票列表: {len(cleaned_stocks)}只")
+                return cleaned_stocks
             else:
                 logger.warning("聚宽未连接，无法获取股票列表")
                 return []
@@ -539,6 +583,71 @@ class JQService:
                 "cache_ttl": self.cache_ttl
             }
         }
+
+    def _safe_float(self, value: Any) -> float:
+        """安全地将值转换为浮点数，处理无穷大和NaN"""
+        try:
+            if value is None or pd.isna(value):
+                return 0.0
+            
+            # 处理numpy类型
+            if hasattr(value, 'item'):
+                value = value.item()
+            
+            # 转换为浮点数
+            result = float(value)
+            
+            # 检查是否为无穷大或NaN
+            if np.isnan(result) or np.isinf(result):
+                return 0.0
+                
+            return result
+        except (ValueError, TypeError, OverflowError):
+            return 0.0
+
+    def clear_cache(self, pattern: str = "*") -> Dict[str, Any]:
+        """清理缓存文件
+        
+        Args:
+            pattern: 缓存文件匹配模式，默认为"*"清理所有缓存
+            
+        Returns:
+            清理结果信息
+        """
+        try:
+            import glob
+            cache_files = glob.glob(os.path.join(self.cache_dir, f"{pattern}.json"))
+            
+            cleared_count = 0
+            cleared_files = []
+            
+            for cache_file in cache_files:
+                try:
+                    os.remove(cache_file)
+                    cleared_count += 1
+                    cleared_files.append(os.path.basename(cache_file))
+                except Exception as e:
+                    logger.warning(f"删除缓存文件失败 {cache_file}: {e}")
+            
+            result = {
+                "success": True,
+                "cleared_count": cleared_count,
+                "cleared_files": cleared_files,
+                "message": f"成功清理 {cleared_count} 个缓存文件"
+            }
+            
+            logger.info(f"缓存清理完成: {result['message']}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"清理缓存失败: {e}"
+            logger.error(error_msg)
+            return {
+                "success": False,
+                "cleared_count": 0,
+                "cleared_files": [],
+                "message": error_msg
+            }
 
 # 创建全局聚宽服务实例
 jq_service = JQService()

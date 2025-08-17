@@ -169,6 +169,16 @@
                         </button>
                     </div>
                 </div>
+                <div class="row mt-3">
+                    <div class="col-md-12 text-center">
+                        <button class="btn btn-warning me-2" onclick="clearCache()">
+                            <i class="fas fa-trash me-2"></i>清理缓存
+                        </button>
+                        <button class="btn btn-info me-2" onclick="showCacheInfo()">
+                            <i class="fas fa-info-circle me-2"></i>缓存信息
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- 股票表格 -->
@@ -397,6 +407,63 @@
                 loadStockList();
             }
         }, 5 * 60 * 1000);
+
+        // 清理缓存
+        async function clearCache() {
+            try {
+                const response = await fetch('/api/v1/jq/cache', {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('缓存清理成功！', 'success');
+                    console.log('缓存清理结果:', result);
+                    
+                    // 清理成功后重新加载数据
+                    setTimeout(() => {
+                        loadStockList();
+                    }, 1000);
+                } else {
+                    showAlert(`缓存清理失败: ${result.detail}`, 'danger');
+                }
+            } catch (error) {
+                console.error('清理缓存失败:', error);
+                showAlert('清理缓存时发生错误', 'danger');
+            }
+        }
+
+        // 显示缓存信息
+        async function showCacheInfo() {
+            try {
+                // 这里可以添加获取缓存信息的API调用
+                showAlert('缓存信息功能开发中...', 'info');
+            } catch (error) {
+                console.error('获取缓存信息失败:', error);
+                showAlert('获取缓存信息失败', 'danger');
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
     </script>
 </body>
 </html>

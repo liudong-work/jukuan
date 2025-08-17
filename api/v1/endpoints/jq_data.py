@@ -3,23 +3,67 @@
 """
 
 from fastapi import APIRouter, HTTPException, status, Query
+from fastapi.responses import JSONResponse
 from typing import List, Optional
 import logging
 from datetime import datetime, timedelta
 import sys
 import os
+import json
+import numpy as np
+import pandas as pd
 
-# 添加项目根目录到Python路径
+# Add project root to Python path for module discovery
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 try:
-    from services.jq_service import jq_service
+    from services.jq_service import jq_service, SafeJSONEncoder
 except ImportError:
-    # 如果导入失败，创建一个模拟服务
     logging.warning("无法导入聚宽服务，使用模拟服务")
     jq_service = None
+    SafeJSONEncoder = None
 
 logger = logging.getLogger(__name__)
+
+class SafeJSONResponse(JSONResponse):
+    """安全的JSON响应，使用自定义编码器"""
+    
+    def render(self, content) -> bytes:
+        if SafeJSONEncoder:
+            return json.dumps(
+                content,
+                ensure_ascii=False,
+                separators=(',', ':'),
+                cls=SafeJSONEncoder
+            ).encode('utf-8')
+        else:
+            return super().render(content)
+
+def clean_data_for_json(data):
+    """清理数据，确保JSON兼容性"""
+    if isinstance(data, dict):
+        cleaned = {}
+        for key, value in data.items():
+            cleaned[key] = clean_data_for_json(value)
+        return cleaned
+    elif isinstance(data, list):
+        return [clean_data_for_json(item) for item in data]
+    elif isinstance(data, (np.integer, np.floating)):
+        try:
+            result = float(data)
+            if np.isnan(result) or np.isinf(result):
+                return 0.0
+            return result
+        except:
+            return 0.0
+    elif isinstance(data, (np.ndarray, pd.Series)):
+        return data.tolist() if hasattr(data, 'tolist') else str(data)
+    elif pd.isna(data):
+        return None
+    elif isinstance(data, (datetime, pd.Timestamp)):
+        return data.isoformat()
+    else:
+        return data
 
 router = APIRouter()
 
@@ -126,7 +170,7 @@ async def get_stocks(
         if len(stocks) > limit:
             stocks = stocks[:limit]
         
-        return {
+        response_data = {
             "market": market,
             "count": len(stocks),
             "total_available": len(stocks),
@@ -134,6 +178,12 @@ async def get_stocks(
             "stocks": stocks,
             "timestamp": datetime.now().isoformat()
         }
+        
+        # 清理数据确保JSON兼容性
+        cleaned_response = clean_data_for_json(response_data)
+        
+        return cleaned_response
+        
     except Exception as e:
         logger.error(f"获取股票列表失败: {e}")
         raise HTTPException(
@@ -397,4 +447,36 @@ async def get_available_date_range():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="获取可用日期范围失败"
+        )
+
+@router.delete("/cache")
+async def clear_cache(
+    pattern: str = Query(default="*", description="缓存文件匹配模式，*表示清理所有缓存")
+):
+    """清理聚宽数据缓存"""
+    try:
+        if jq_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="聚宽服务不可用"
+            )
+        
+        result = jq_service.clear_cache(pattern)
+        
+        if result["success"]:
+            return {
+                "message": "缓存清理成功",
+                "details": result
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=result["message"]
+            )
+            
+    except Exception as e:
+        logger.error(f"清理缓存失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="清理缓存失败"
         )
