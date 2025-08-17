@@ -1,6 +1,10 @@
 """
 量化交易系统Web应用
 基于Dash框架的Web界面
+
+版本: v1.1.0
+发布日期: 2025-08-17
+作者: liudong-work
 """
 
 import dash
@@ -29,12 +33,17 @@ from src.utils.joinquant_login import create_login_section
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 
+# 版本信息
+__version__ = "1.1.0"
+__author__ = "liudong-work"
+__date__ = "2025-08-17"
+
 # 初始化Dash应用
 app = dash.Dash(__name__, external_stylesheets=[
     dbc.themes.BOOTSTRAP,
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
 ])
-app.title = "量化交易系统"
+app.title = f"量化交易系统 v{__version__}"
 
 # 全局变量
 data_provider = None

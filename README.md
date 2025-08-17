@@ -1,8 +1,36 @@
-# 量化交易系统 - 基于聚宽接口
+# 量化交易系统 (Jukuan)
 
-这是一个基于聚宽（JoinQuant）API的完整量化交易系统，利用聚宽强大的数据源和交易接口构建。
+[![Version](https://img.shields.io/badge/version-v1.1.0-blue.svg)](https://github.com/liudong-work/jukuan/releases)
+[![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
+[![Dash](https://img.shields.io/badge/Dash-2.0+-orange.svg)](https://dash.plotly.com/)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
-## 功能特性
+> 基于聚宽API的智能量化交易平台，提供完整的策略开发、回测分析和股票筛选功能
+
+## 🚀 最新版本 v1.1.0
+
+**发布日期**: 2025-08-17
+
+### ✨ 新功能特性
+- **聚宽登录管理模块化重构** - 完整的登录/退出/状态管理
+- **智能界面状态管理** - 动态界面切换和状态同步
+- **自选股持久化存储** - 本地配置文件和云端同步
+- **高级股票筛选策略** - 多条件智能筛选
+
+### 🔧 技术改进
+- 修复重复组件ID问题
+- 优化回调函数冲突处理
+- 改进错误处理和日志记录
+- 统一聚宽连接状态检查
+
+### 🎨 用户体验提升
+- 界面布局优化和响应式设计
+- 按钮尺寸和间距调整
+- 状态反馈和交互优化
+
+---
+
+## 📋 功能特性
 
 - 📊 聚宽实时数据获取（A股、港股、美股、期货等）
 - 🎯 多种交易策略（趋势跟踪、均值回归、机器学习等）
