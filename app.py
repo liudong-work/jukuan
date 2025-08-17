@@ -477,7 +477,140 @@ app.layout = dbc.Container([
                             ], style=custom_css['warning-card'])
                         ], width=12)
                     ])
-                ], label="📋 数据预览", tab_id="data-preview")
+                ], label="📋 数据预览", tab_id="data-preview"),
+                
+                # 银河证券标签页
+                dbc.Tab([
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Card([
+                                dbc.CardHeader([
+                                    html.H5([
+                                        html.Span("🏦", className="me-2"),
+                                        "银河证券"
+                                    ], className="mb-0")
+                                ], style=custom_css['card-header']),
+                                dbc.CardBody([
+                                    # 银河证券连接区域
+                                    dbc.Row([
+                                        dbc.Col([
+                                            dbc.Card([
+                                                dbc.CardHeader([
+                                                    html.H6([
+                                                        html.Span("🔗", className="me-2"),
+                                                        "连接银河证券"
+                                                    ], className="mb-0")
+                                                ], style={'background': 'linear-gradient(135deg, #28a745 0%, #20c997 100%)', 'color': 'white'}),
+                                                dbc.CardBody([
+                                                    dbc.Row([
+                                                        dbc.Col([
+                                                            dbc.Label("资金账号", className="fw-bold"),
+                                                            dbc.Input(
+                                                                id="galaxy-account",
+                                                                type="text",
+                                                                placeholder="请输入资金账号",
+                                                                className="mb-3"
+                                                            )
+                                                        ], width=4),
+                                                        dbc.Col([
+                                                            dbc.Label("交易密码", className="fw-bold"),
+                                                            dbc.Input(
+                                                                id="galaxy-password",
+                                                                type="password",
+                                                                placeholder="请输入交易密码",
+                                                                className="mb-3"
+                                                            )
+                                                        ], width=4),
+                                                        dbc.Col([
+                                                            dbc.Label("服务器地址", className="fw-bold"),
+                                                            dbc.Select(
+                                                                id="galaxy-server",
+                                                                options=[
+                                                                    {"label": "银河证券主站", "value": "https://trade.galaxy.com.cn"},
+                                                                    {"label": "银河证券测试站", "value": "https://test.galaxy.com.cn"}
+                                                                ],
+                                                                value="https://trade.galaxy.com.cn",
+                                                                className="mb-3"
+                                                            )
+                                                        ], width=4)
+                                                    ]),
+                                                    dbc.Row([
+                                                        dbc.Col([
+                                                            dbc.Checkbox(
+                                                                id="galaxy-remember",
+                                                                label="记住账号信息",
+                                                                value=False,
+                                                                className="mb-3"
+                                                            )
+                                                        ], width=6),
+                                                        dbc.Col([
+                                                            dbc.Button([
+                                                                html.Span("🔗", className="me-2"),
+                                                                "连接银河证券"
+                                                            ], id="connect-galaxy", color="success", size="md", className="w-100")
+                                                        ], width=6)
+                                                    ]),
+                                                    html.Div(id="galaxy-connection-status", className="mt-3")
+                                                ])
+                                            ], style=custom_css['success-card'])
+                                        ], width=12)
+                                    ], className="mb-4"),
+                                    
+                                    # 账户信息区域
+                                    dbc.Row([
+                                        dbc.Col([
+                                            dbc.Card([
+                                                dbc.CardHeader([
+                                                    html.H6([
+                                                        html.Span("💰", className="me-2"),
+                                                        "账户信息"
+                                                    ], className="mb-0")
+                                                ], style={'background': 'linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%)', 'color': 'white'}),
+                                                dbc.CardBody([
+                                                    html.Div(id="galaxy-account-info")
+                                                ])
+                                            ], style=custom_css['info-card'])
+                                        ], width=12)
+                                    ], className="mb-4"),
+                                    
+                                    # 持仓信息区域
+                                    dbc.Row([
+                                        dbc.Col([
+                                            dbc.Card([
+                                                dbc.CardHeader([
+                                                    html.H6([
+                                                        html.Span("💼", className="me-2"),
+                                                        "持仓信息"
+                                                    ], className="mb-0")
+                                                ], style={'background': 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)', 'color': 'white'}),
+                                                dbc.CardBody([
+                                                    html.Div(id="galaxy-positions")
+                                                ])
+                                            ], style=custom_css['warning-card'])
+                                        ], width=12)
+                                    ], className="mb-4"),
+                                    
+                                    # 交易订单区域
+                                    dbc.Row([
+                                        dbc.Col([
+                                            dbc.Card([
+                                                dbc.CardHeader([
+                                                    html.H6([
+                                                        html.Span("📋", className="me-2"),
+                                                        "交易订单"
+                                                    ], className="mb-0")
+                                                ], style={'background': 'linear-gradient(135deg, #6c757d 0%, #495057 100%)', 'color': 'white'}),
+                                                dbc.CardBody([
+                                                    html.Div(id="galaxy-orders")
+                                                ])
+                                            ], style=custom_css['info-card'])
+                                        ], width=12)
+                                    ])
+                                ])
+                            ], style=custom_css['info-card'])
+                        ], width=12)
+                    ])
+                ], label="🏦 银河证券", tab_id="galaxy-securities")
             ], id="main-tabs", active_tab="data-connection")
         ], width=12)
     ])
@@ -1729,6 +1862,247 @@ def load_saved_watchlist(pathname):
         print(f"加载自选股失败: {e}")
     
     return display_watchlist()
+
+# 银河证券回调函数
+
+@app.callback(
+    Output("galaxy-connection-status", "children"),
+    Input("connect-galaxy", "n_clicks"),
+    [State("galaxy-account", "value"),
+     State("galaxy-password", "value"),
+     State("galaxy-server", "value"),
+     State("galaxy-remember", "value")],
+    prevent_initial_call=True
+)
+def connect_galaxy_securities(n_clicks, account, password, server, remember):
+    """连接银河证券服务器"""
+    if not n_clicks:
+        return ""
+        
+    try:
+        if not account or not password:
+            return dbc.Alert("⚠️ 请输入资金账号和交易密码", color="warning", className="mb-0")
+        
+        print(f"=== 连接银河证券 ===")
+        print(f"账号: {account}")
+        print(f"服务器: {server}")
+        print(f"记住账号: {remember}")
+        
+        # 导入银河证券模块
+        from src.trading.brokers.galaxy_securities import GalaxySecuritiesBroker
+        
+        # 创建配置
+        config = {
+            'account': account,
+            'password': password,
+            'server_url': server
+        }
+        
+        # 创建交易接口实例
+        global galaxy_broker
+        galaxy_broker = GalaxySecuritiesBroker(config)
+        
+        # 尝试连接
+        if galaxy_broker.connect():
+            print("银河证券连接成功")
+            return dbc.Alert("✅ 银河证券连接成功", color="success", className="mb-0")
+        else:
+            print("银河证券连接失败")
+            return dbc.Alert("❌ 银河证券连接失败", color="danger", className="mb-0")
+            
+    except Exception as e:
+        print(f"连接银河证券异常: {e}")
+        return dbc.Alert(f"❌ 连接异常: {str(e)}", color="danger", className="mb-0")
+
+@app.callback(
+    Output("galaxy-account-info", "children"),
+    Input("connect-galaxy", "n_clicks"),
+    prevent_initial_call=True
+)
+def update_galaxy_account_info(n_clicks):
+    """更新银河证券账户信息"""
+    if not n_clicks:
+        return "请先连接银河证券服务器"
+        
+    try:
+        if 'galaxy_broker' not in globals() or not galaxy_broker.is_connected:
+            return dbc.Alert("请先连接银河证券服务器", color="warning", className="mb-0")
+        
+        # 获取账户信息
+        account_info = galaxy_broker.get_account_info()
+        
+        if 'error' in account_info:
+            return dbc.Alert(f"获取账户信息失败: {account_info['error']}", color="danger", className="mb-0")
+        
+        # 显示账户信息
+        return dbc.Card([
+            dbc.CardBody([
+                html.H6("账户概览", className="text-primary mb-3"),
+                dbc.Row([
+                    dbc.Col([
+                        html.Div([
+                            html.Small("总资产", className="text-muted"),
+                            html.H5(f"¥{account_info['total_assets']:,.2f}", className="text-success mb-0")
+                        ])
+                    ], width=4),
+                    dbc.Col([
+                        html.Div([
+                            html.Small("可用资金", className="text-muted"),
+                            html.H5(f"¥{account_info['available_cash']:,.2f}", className="text-info mb-0")
+                        ])
+                    ], width=4),
+                    dbc.Col([
+                        html.Div([
+                            html.Small("市值", className="text-muted"),
+                            html.H5(f"¥{account_info['market_value']:,.2f}", className="text-warning mb-0")
+                        ])
+                    ], width=4)
+                ], className="mb-3"),
+                dbc.Row([
+                    dbc.Col([
+                        html.Div([
+                            html.Small("总盈亏", className="text-muted"),
+                            html.H6(f"¥{account_info['total_profit']:,.2f}", 
+                                   className="text-success" if account_info['total_profit'] >= 0 else "text-danger")
+                        ])
+                    ], width=6),
+                    dbc.Col([
+                        html.Div([
+                            html.Small("当日盈亏", className="text-muted"),
+                            html.H6(f"¥{account_info['today_profit']:,.2f}", 
+                                   className="text-success" if account_info['today_profit'] >= 0 else "text-danger")
+                        ])
+                    ], width=6)
+                ])
+            ])
+        ], style=custom_css['info-card'])
+        
+    except Exception as e:
+        print(f"获取账户信息失败: {e}")
+        return dbc.Alert(f"❌ 获取账户信息失败: {str(e)}", color="danger", className="mb-0")
+
+@app.callback(
+    Output("galaxy-positions", "children"),
+    Input("connect-galaxy", "n_clicks"),
+    prevent_initial_call=True
+)
+def update_galaxy_positions(n_clicks):
+    """更新银河证券持仓信息"""
+    if not n_clicks:
+        return "请先连接银河证券服务器"
+        
+    try:
+        if 'galaxy_broker' not in globals() or not galaxy_broker.is_connected:
+            return dbc.Alert("请先连接银河证券服务器", color="warning", className="mb-0")
+        
+        # 获取持仓信息
+        positions = galaxy_broker.get_positions()
+        
+        if not positions:
+            return html.Div("暂无持仓", className="text-muted text-center")
+        
+        # 创建持仓表格
+        return dbc.Table([
+            html.Thead([
+                html.Tr([
+                    html.Th("股票代码"),
+                    html.Th("股票名称"),
+                    html.Th("持仓数量"),
+                    html.Th("成本价"),
+                    html.Th("当前价"),
+                    html.Th("盈亏"),
+                    html.Th("操作")
+                ])
+            ]),
+            html.Tbody([
+                html.Tr([
+                    html.Td(pos['stock_code']),
+                    html.Td(pos['stock_name']),
+                    html.Td(f"{pos['quantity']:,}"),
+                    html.Td(f"¥{pos['avg_cost']:.2f}"),
+                    html.Td(f"¥{pos['current_price']:.2f}"),
+                    html.Td([
+                        html.Span(f"¥{pos['profit_loss']:,.2f}", 
+                                 className="text-success" if pos['profit_loss'] >= 0 else "text-danger"),
+                        html.Br(),
+                        html.Small(f"{pos['profit_loss_ratio']:.2f}%", 
+                                  className="text-success" if pos['profit_loss_ratio'] >= 0 else "text-danger")
+                    ]),
+                    html.Td([
+                        dbc.Button("卖出", size="sm", color="danger", 
+                                  id=f"sell-{pos['stock_code'].replace('.', '_')}")
+                    ])
+                ]) for pos in positions
+            ])
+        ], bordered=True, hover=True, responsive=True, striped=True)
+        
+    except Exception as e:
+        print(f"获取持仓信息失败: {e}")
+        return dbc.Alert(f"❌ 获取持仓信息失败: {str(e)}", color="danger", className="mb-0")
+
+@app.callback(
+    Output("galaxy-orders", "children"),
+    Input("connect-galaxy", "n_clicks"),
+    prevent_initial_call=True
+)
+def update_galaxy_orders(n_clicks):
+    """更新银河证券订单信息"""
+    if not n_clicks:
+        return "请先连接银河证券服务器"
+        
+    try:
+        if 'galaxy_broker' not in globals() or not galaxy_broker.is_connected:
+            return dbc.Alert("请先连接银河证券服务器", color="warning", className="mb-0")
+        
+        # 获取订单信息
+        orders = galaxy_broker.get_orders()
+        
+        if not orders:
+            return html.Div("暂无订单", className="text-muted text-center")
+        
+        # 创建订单表格
+        return dbc.Table([
+            html.Thead([
+                html.Tr([
+                    html.Th("订单ID"),
+                    html.Th("股票代码"),
+                    html.Th("类型"),
+                    html.Th("数量"),
+                    html.Th("价格"),
+                    html.Th("状态"),
+                    html.Th("操作")
+                ])
+            ]),
+            html.Tbody([
+                html.Tr([
+                    html.Td(order['order_id']),
+                    html.Td(order['stock_code']),
+                    html.Td([
+                        html.Span(order['order_type'], 
+                                 className="badge bg-success" if order['order_type'] == 'buy' else "badge bg-danger")
+                    ]),
+                    html.Td(f"{order['order_quantity']:,}"),
+                    html.Td(f"¥{order['order_price']:.2f}"),
+                    html.Td([
+                        html.Span(order['order_status'], 
+                                 className="badge bg-primary" if order['order_status'] == 'pending' else 
+                                         "badge bg-success" if order['order_status'] == 'filled' else "badge bg-secondary")
+                    ]),
+                    html.Td([
+                        dbc.Button("撤单", size="sm", color="warning", 
+                                  id={"type": "cancel-order", "index": order['order_id']})
+                        if order['order_status'] == 'pending' else html.Span("-")
+                    ])
+                ]) for order in orders
+            ])
+        ], bordered=True, hover=True, responsive=True, striped=True)
+        
+    except Exception as e:
+        print(f"获取订单信息失败: {e}")
+        return dbc.Alert(f"❌ 获取订单信息失败: {str(e)}", color="danger", className="mb-0")
+
+# 全局变量
+galaxy_broker = None
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=8051)

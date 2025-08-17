@@ -1,0 +1,88 @@
+{
+  "broker_info": {
+    "name": "银河证券",
+    "server_url": "https://trade.galaxy.com.cn",
+    "api_version": "v1.0",
+    "description": "银河证券实盘交易配置"
+  },
+  "account_settings": {
+    "account": "",
+    "password": "",
+    "remember_credentials": false,
+    "auto_connect": false,
+    "connection_timeout": 30,
+    "heartbeat_interval": 60
+  },
+  "trading_settings": {
+    "commission_rate": 0.0003,
+    "stamp_tax_rate": 0.001,
+    "transfer_fee": 0.00002,
+    "min_commission": 5.0,
+    "max_position_ratio": 0.95,
+    "risk_level": "R3",
+    "max_single_position": 0.2,
+    "max_daily_loss": 0.05,
+    "max_drawdown": 0.15
+  },
+  "order_settings": {
+    "default_order_method": "limit",
+    "max_order_quantity": 1000000,
+    "min_order_quantity": 100,
+    "price_precision": 2,
+    "quantity_step": 100,
+    "auto_cancel_timeout": 300,
+    "allow_market_order": true,
+    "allow_conditional_order": false
+  },
+  "risk_control": {
+    "enable_stop_loss": true,
+    "enable_take_profit": true,
+    "default_stop_loss_ratio": 0.05,
+    "default_take_profit_ratio": 0.15,
+    "max_position_value": 1000000,
+    "max_daily_trades": 100,
+    "min_volume_ratio": 0.1,
+    "max_price_deviation": 0.1
+  },
+  "market_data": {
+    "update_interval": 5,
+    "enable_real_time": true,
+    "enable_level2": false,
+    "enable_tick_data": false,
+    "cache_size": 1000,
+    "max_symbols": 100
+  },
+  "trading_hours": {
+    "morning_start": "09:15",
+    "morning_end": "11:30",
+    "afternoon_start": "13:00",
+    "afternoon_end": "15:00",
+    "enable_pre_market": false,
+    "enable_after_market": false
+  },
+  "notifications": {
+    "enable_email": false,
+    "enable_sms": false,
+    "enable_push": true,
+    "trade_notifications": true,
+    "risk_notifications": true,
+    "system_notifications": true
+  },
+  "logging": {
+    "level": "INFO",
+    "file_path": "logs/galaxy_trading.log",
+    "max_file_size": "10MB",
+    "backup_count": 5,
+    "log_trades": true,
+    "log_orders": true,
+    "log_errors": true
+  },
+  "advanced": {
+    "enable_algorithmic_trading": false,
+    "enable_portfolio_optimization": false,
+    "enable_risk_parity": false,
+    "enable_machine_learning": false,
+    "backtest_mode": false,
+    "paper_trading": false
+  }
+}
