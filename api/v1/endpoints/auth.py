@@ -4,13 +4,13 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
+# from sqlalchemy.ext.asyncio import AsyncSession  # 暂时注释掉
 from datetime import timedelta
 import logging
 
-from core.database import get_db
-from core.security import create_access_token, get_current_user
-from models import User
+# from core.database import get_db  # 暂时注释掉
+from core.security import create_access_token
+# from models import User  # 暂时注释掉
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ async def register(
     username: str,
     email: str,
     password: str,
-    db: AsyncSession = Depends(get_db)
+    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
 ):
     """用户注册"""
     try:
@@ -39,7 +39,7 @@ async def register(
 @router.post("/token")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
 ):
     """用户登录"""
     try:
@@ -57,17 +57,18 @@ async def login(
             detail="用户名或密码错误"
         )
 
-@router.get("/me")
-async def get_current_user_info(
-    current_user: User = Depends(get_current_user)
-):
-    """获取当前用户信息"""
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email,
-        "is_active": current_user.is_active
-    }
+# 暂时注释掉需要认证的端点
+# @router.get("/me")
+# async def get_current_user_info(
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """获取当前用户信息"""
+#     return {
+#         "id": current_user.id,
+#         "username": current_user.username,
+#         "email": current_user.email,
+#         "is_active": current_user.is_active
+#     }
 
 @router.post("/logout")
 async def logout():

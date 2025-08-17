@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>聚宽数据模块 - 量化交易系统 v2.0.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .jq-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+        }
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .status-online { border-left: 5px solid #28a745; }
+        .status-offline { border-left: 5px solid #dc3545; }
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .cache-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left me-2"></i>
+                返回主页
+            </a>
+            <span class="navbar-text">
+                聚宽数据模块 - 增强版
+            </span>
+        </div>
+    </nav>
+
+    <!-- 头部 -->
+    <section class="jq-header">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold mb-3">
+                <i class="fas fa-database me-3"></i>
+                聚宽数据模块 v2.0
+            </h1>
+            <p class="lead">智能缓存、市场概览、行业分析等高级功能</p>
+        </div>
+    </section>
+
+    <!-- 主要内容 -->
+    <section class="py-5">
+        <div class="container">
+            <!-- 系统状态 -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card feature-card" id="connectionCard">
+                        <div class="card-header">
+                            <h5><i class="fas fa-plug me-2"></i>连接状态</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="connectionStatus">
+                                <p>检查中...</p>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-success me-2" onclick="connectJQ()">
+                                    <i class="fas fa-link me-2"></i>连接
+                                </button>
+                                <button class="btn btn-danger" onclick="disconnectJQ()">
+                                    <i class="fas fa-unlink me-2"></i>断开
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="cache-info">
+                        <h5><i class="fas fa-database me-2"></i>缓存信息</h5>
+                        <div id="cacheInfo">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 市场概览 -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card feature-card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-line me-2"></i>市场概览</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-primary mb-3" onclick="loadMarketOverview()">
+                                <i class="fas fa-sync me-2"></i>刷新市场概览
+                            </button>
+                            <div id="marketOverview">
+                                <p class="text-muted">点击按钮加载市场概览数据</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行业板块表现 -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card feature-card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-industry me-2"></i>行业板块表现</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-info mb-3" onclick="loadSectorPerformance()">
+                                <i class="fas fa-sync me-2"></i>刷新行业数据
+                            </button>
+                            <div id="sectorPerformance">
+                                <p class="text-muted">点击按钮加载行业板块表现数据</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据查询工具 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card feature-card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-search me-2"></i>智能数据查询</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">股票代码:</label>
+                                <input type="text" class="form-control" id="stockCodeInput" 
+                                       placeholder="如: 000001.XSHE" value="000001.XSHE">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">日期范围:</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="date" class="form-control" id="startDateInput">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="date" class="form-control" id="endDateInput">
+                                    </div>
+                                </div>
+                                <small class="text-muted">留空使用智能日期范围</small>
+                            </div>
+                            <button class="btn btn-success" onclick="smartQueryData()">
+                                <i class="fas fa-search me-2"></i>智能查询
+                            </button>
+                            <div id="smartQueryResult" class="mt-3">
+                                <p class="text-muted">使用智能日期范围查询数据</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card feature-card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-list me-2"></i>股票列表管理</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">选择市场:</label>
+                                <select class="form-select" id="marketSelect">
+                                    <option value="CN">A股市场 (CN)</option>
+                                    <option value="HK">港股市场 (HK)</option>
+                                    <option value="US">美股市场 (US)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-warning" onclick="loadStockList()">
+                                <i class="fas fa-download me-2"></i>获取股票列表
+                            </button>
+                            <div id="stockListResult" class="mt-3">
+                                <p class="text-muted">点击按钮获取股票列表</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 可用日期范围 -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card feature-card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-calendar me-2"></i>可用日期范围</h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-secondary" onclick="loadDateRange()">
+                                <i class="fas fa-calendar-alt me-2"></i>查看可用日期范围
+                            </button>
+                            <div id="dateRangeInfo" class="mt-3">
+                                <p class="text-muted">点击按钮查看账号可用的日期范围</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            
+            document.getElementById('startDateInput').value = lastMonth.toISOString().split('T')[0];
+            document.getElementById('endDateInput').value = today.toISOString().split('T')[0];
+            
+            // 加载初始状态
+            loadConnectionStatus();
+            loadCacheInfo();
+        });
+
+        // 加载连接状态
+        async function loadConnectionStatus() {
+            try {
+                const response = await fetch('/api/v1/jq/status');
+                const data = await response.json();
+                
+                const status = data.status;
+                const statusHtml = `
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge ${status.is_connected ? 'bg-success' : 'bg-danger'} me-2">
+                            ${status.is_connected ? '已连接' : '未连接'}
+                        </span>
+                        <span class="fw-bold">${status.status}</span>
+                    </div>
+                    <p class="mb-1"><strong>用户名:</strong> ${status.username || '未配置'}</p>
+                    <p class="mb-1"><strong>最后检查:</strong> ${new Date(status.last_check).toLocaleString()}</p>
+                    ${status.available_date_range ? `<p class="mb-0"><strong>可用日期范围:</strong> ${status.available_date_range[0]} 至 ${status.available_date_range[1]}</p>` : ''}
+                `;
+                
+                document.getElementById('connectionStatus').innerHTML = statusHtml;
+                
+                // 更新卡片样式
+                const card = document.getElementById('connectionCard');
+                card.className = card.className.replace(/status-\w+/g, '');
+                if (status.is_connected) {
+                    card.classList.add('status-online');
+                } else {
+                    card.classList.add('status-offline');
+                }
+            } catch (error) {
+                console.error('加载连接状态失败:', error);
+            }
+        }
+
+        // 加载缓存信息
+        async function loadCacheInfo() {
+            try {
+                const response = await fetch('/api/v1/jq/health');
+                const data = await response.json();
+                
+                if (data.cache_info) {
+                    const cacheHtml = `
+                        <p class="mb-1"><strong>缓存目录:</strong> ${data.cache_info.cache_dir}</p>
+                        <p class="mb-1"><strong>缓存TTL:</strong> ${data.cache_info.cache_ttl}秒</p>
+                        <p class="mb-0"><strong>状态:</strong> 正常</p>
+                    `;
+                    document.getElementById('cacheInfo').innerHTML = cacheHtml;
+                }
+            } catch (error) {
+                console.error('加载缓存信息失败:', error);
+            }
+        }
+
+        // 连接聚宽
+        async function connectJQ() {
+            try {
+                const response = await fetch('/api/v1/jq/connect', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('聚宽连接成功！');
+                    loadConnectionStatus();
+                } else {
+                    alert(`连接失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('连接聚宽失败:', error);
+                alert('连接失败，请检查网络连接');
+            }
+        }
+
+        // 断开聚宽
+        async function disconnectJQ() {
+            try {
+                const response = await fetch('/api/v1/jq/disconnect', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('聚宽连接已断开');
+                    loadConnectionStatus();
+                } else {
+                    alert(`断开失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('断开聚宽失败:', error);
+                alert('断开失败，请检查网络连接');
+            }
+        }
+
+        // 加载市场概览
+        async function loadMarketOverview() {
+            try {
+                document.getElementById('marketOverview').innerHTML = '<p>加载中...</p>';
+                
+                const response = await fetch('/api/v1/jq/market-overview');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const overview = data.overview;
+                    let overviewHtml = `
+                        <p><strong>时间戳:</strong> ${new Date(overview.timestamp).toLocaleString()}</p>
+                        <div class="row">
+                    `;
+                    
+                    if (overview.indices && Object.keys(overview.indices).length > 0) {
+                        overviewHtml += '<div class="col-md-6"><h6>主要指数</h6>';
+                        Object.entries(overview.indices).forEach(([code, info]) => {
+                            overviewHtml += `
+                                <div class="border-bottom p-2">
+                                    <strong>${info.name}</strong><br>
+                                    <small>价格: ${info.price} | 涨跌: ${info.change > 0 ? '+' : ''}${info.change.toFixed(2)} (${info.change_pct.toFixed(2)}%)</small>
+                                </div>
+                            `;
+                        });
+                        overviewHtml += '</div>';
+                    }
+                    
+                    overviewHtml += '</div>';
+                    document.getElementById('marketOverview').innerHTML = overviewHtml;
+                } else {
+                    document.getElementById('marketOverview').innerHTML = `<p class="text-danger">加载失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('加载市场概览失败:', error);
+                document.getElementById('marketOverview').innerHTML = '<p class="text-danger">加载失败，请检查网络连接</p>';
+            }
+        }
+
+        // 加载行业板块表现
+        async function loadSectorPerformance() {
+            try {
+                document.getElementById('sectorPerformance').innerHTML = '<p>加载中...</p>';
+                
+                const response = await fetch('/api/v1/jq/sector-performance');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const performance = data.performance;
+                    let performanceHtml = `
+                        <p><strong>时间戳:</strong> ${new Date(performance.timestamp).toLocaleString()}</p>
+                        <div class="row">
+                    `;
+                    
+                    if (performance.sectors) {
+                        Object.entries(performance.sectors).forEach(([key, sector]) => {
+                            const changeClass = sector.change_pct >= 0 ? 'text-success' : 'text-danger';
+                            performanceHtml += `
+                                <div class="col-md-3 mb-2">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h6>${sector.name}</h6>
+                                            <p class="${changeClass} mb-1">${sector.change_pct > 0 ? '+' : ''}${sector.change_pct}%</p>
+                                            <small class="text-muted">成交量: ${sector.volume.toLocaleString()}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    performanceHtml += '</div>';
+                    document.getElementById('sectorPerformance').innerHTML = performanceHtml;
+                } else {
+                    document.getElementById('sectorPerformance').innerHTML = `<p class="text-danger">加载失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('加载行业板块表现失败:', error);
+                document.getElementById('sectorPerformance').innerHTML = '<p class="text-danger">加载失败，请检查网络连接</p>';
+            }
+        }
+
+        // 智能查询数据
+        async function smartQueryData() {
+            const stockCode = document.getElementById('stockCodeInput').value.trim();
+            const startDate = document.getElementById('startDateInput').value;
+            const endDate = document.getElementById('endDateInput').value;
+            
+            if (!stockCode) {
+                alert('请输入股票代码');
+                return;
+            }
+            
+            try {
+                document.getElementById('smartQueryResult').innerHTML = '<p>查询中...</p>';
+                
+                // 构建查询参数
+                let url = `/api/v1/jq/daily-data/${stockCode}`;
+                const params = new URLSearchParams();
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+                if (params.toString()) url += '?' + params.toString();
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.count > 0) {
+                        const dataHtml = data.data.slice(0, 10).map(item => `
+                            <div class="border-bottom p-2">
+                                <strong>${item.date || '未知日期'}</strong><br>
+                                <small>开盘: ${item.open} | 最高: ${item.high} | 最低: ${item.low} | 收盘: ${item.close} | 成交量: ${item.volume}</small>
+                            </div>
+                        `).join('');
+                        
+                        document.getElementById('smartQueryResult').innerHTML = `
+                            <p><strong>股票代码:</strong> ${data.stock_code}</p>
+                            <p><strong>数据条数:</strong> ${data.count}</p>
+                            <p><strong>日期范围:</strong> ${data.start_date} 至 ${data.end_date}</p>
+                            <p><strong>前10条数据:</strong></p>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                ${dataHtml}
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('smartQueryResult').innerHTML = '<p class="text-muted">该日期范围内无数据</p>';
+                    }
+                } else {
+                    document.getElementById('smartQueryResult').innerHTML = `<p class="text-danger">查询失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('智能查询失败:', error);
+                document.getElementById('smartQueryResult').innerHTML = '<p class="text-danger">查询失败，请检查网络连接</p>';
+            }
+        }
+
+        // 加载股票列表
+        async function loadStockList() {
+            const market = document.getElementById('marketSelect').value;
+            
+            try {
+                document.getElementById('stockListResult').innerHTML = '<p>加载中...</p>';
+                
+                const response = await fetch(`/api/v1/jq/stocks?market=${market}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const stocksHtml = data.stocks.slice(0, 20).map(stock => 
+                        `<span class="badge bg-primary me-1 mb-1">${stock}</span>`
+                    ).join('');
+                    
+                    document.getElementById('stockListResult').innerHTML = `
+                        <p><strong>市场:</strong> ${data.market}</p>
+                        <p><strong>总数:</strong> ${data.count.toLocaleString()}</p>
+                        <p><strong>前20只:</strong></p>
+                        <div>${stocksHtml}</div>
+                    `;
+                } else {
+                    document.getElementById('stockListResult').innerHTML = `<p class="text-danger">获取失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('加载股票列表失败:', error);
+                document.getElementById('stockListResult').innerHTML = '<p class="text-danger">加载失败，请检查网络连接</p>';
+            }
+        }
+
+        // 加载日期范围
+        async function loadDateRange() {
+            try {
+                document.getElementById('dateRangeInfo').innerHTML = '<p>加载中...</p>';
+                
+                const response = await fetch('/api/v1/jq/available-date-range');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const dateRange = data.available_date_range;
+                    document.getElementById('dateRangeInfo').innerHTML = `
+                        <p><strong>可用日期范围:</strong></p>
+                        <div class="alert alert-info">
+                            <strong>开始日期:</strong> ${dateRange[0]}<br>
+                            <strong>结束日期:</strong> ${dateRange[1]}
+                        </div>
+                        <p class="text-muted">${data.note}</p>
+                    `;
+                } else {
+                    document.getElementById('dateRangeInfo').innerHTML = `<p class="text-danger">加载失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('加载日期范围失败:', error);
+                document.getElementById('dateRangeInfo').innerHTML = '<p class="text-danger">加载失败，请检查网络连接</p>';
+            }
+        }
+    </script>
+</body>
+</html>

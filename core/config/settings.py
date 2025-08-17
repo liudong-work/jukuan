@@ -5,7 +5,8 @@
 
 import os
 from typing import List, Optional
-from pydantic import BaseSettings, Field, validator
+from pydantic_settings import BaseSettings
+from pydantic import Field, validator
 
 class Settings(BaseSettings):
     """系统配置类"""
@@ -45,7 +46,7 @@ class Settings(BaseSettings):
     
     # 交易配置
     MAX_POSITION_SIZE: float = Field(default=100000.0, env="MAX_POSITION_SIZE")
-    MAX_SINGLE_POSITION: float = Field(default=20000.0, env="MAX_SINGLE_POSITION")
+    MAX_SINGLE_POSITION: float = Field(default=20000.0, env="MAX_POSITION_SIZE")
     STOP_LOSS_RATIO: float = Field(default=0.05, env="STOP_LOSS_RATIO")
     TAKE_PROFIT_RATIO: float = Field(default=0.15, env="TAKE_PROFIT_RATIO")
     

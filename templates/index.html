@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量化交易系统 v2.0.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+        }
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .jq-status-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                量化交易系统 v2.0.0
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dashboard">仪表板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#jq-data">聚宽数据</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#trading">交易</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#strategy">策略</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#analysis">分析</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/docs" target="_blank">API文档</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-rocket me-3"></i>
+                量化交易系统 v2.0.0
+            </h1>
+            <p class="lead mb-4">基于FastAPI的现代化量化交易平台</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="d-flex justify-content-center gap-3">
+                        <span class="status-indicator status-online"></span>
+                        <span>系统状态: 在线</span>
+                        <span class="ms-3">版本: 2.0.0</span>
+                        <span class="ms-3">启动时间: <span id="uptime">--</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要功能区域 -->
+    <section class="py-5" id="dashboard">
+        <div class="container">
+            <h2 class="text-center mb-5">系统概览</h2>
+            
+            <!-- 关键指标 -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="metric-card text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <h4 id="totalReturn">0.00%</h4>
+                        <p class="mb-0">总收益率</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card text-center">
+                        <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                        <h4 id="portfolioValue">¥1,000,000</h4>
+                        <p class="mb-0">投资组合价值</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card text-center">
+                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                        <h4 id="riskLevel">低</h4>
+                        <p class="mb-0">风险等级</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card text-center">
+                        <i class="fas fa-cogs fa-2x mb-2"></i>
+                        <h4 id="activeStrategies">3</h4>
+                        <p class="mb-0">活跃策略</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能卡片 -->
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-bar fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">实时行情</h5>
+                            <p class="card-text">获取A股、港股、美股等实时市场数据</p>
+                            <button class="btn btn-primary" onclick="loadMarketData()">
+                                <i class="fas fa-play me-2"></i>启动
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-robot fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">自动交易</h5>
+                            <p class="card-text">基于策略的智能自动交易执行</p>
+                            <button class="btn btn-success" onclick="startAutoTrading()">
+                                <i class="fas fa-play me-2"></i>启动
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-analytics fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">策略回测</h5>
+                            <p class="card-text">历史数据回测和策略优化</p>
+                            <button class="btn btn-info" onclick="runBacktest()">
+                                <i class="fas fa-play me-2"></i>启动
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 聚宽数据区域 -->
+    <section class="py-5 bg-light" id="jq-data">
+        <div class="container">
+            <h2 class="text-center mb-5">
+                <i class="fas fa-database me-2"></i>聚宽数据服务
+            </h2>
+            
+            <!-- 聚宽状态 -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="jq-status-card text-center">
+                        <h5><i class="fas fa-plug me-2"></i>连接状态</h5>
+                        <div id="jqConnectionStatus">
+                            <p>检查中...</p>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-light me-2" onclick="connectJQ()">
+                                <i class="fas fa-link me-2"></i>连接
+                            </button>
+                            <button class="btn btn-outline-light" onclick="disconnectJQ()">
+                                <i class="fas fa-unlink me-2"></i>断开
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-line me-2"></i>数据统计</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="jqDataStats">
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 股票数据 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-list me-2"></i>股票列表</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <select class="form-select" id="marketSelect">
+                                    <option value="CN">A股市场</option>
+                                    <option value="HK">港股市场</option>
+                                    <option value="US">美股市场</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="loadStockList()">
+                                <i class="fas fa-download me-2"></i>获取股票列表
+                            </button>
+                            <div id="stockListResult" class="mt-3">
+                                <p class="text-muted">点击按钮获取股票列表</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-search me-2"></i>股票查询</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="stockCodeInput" 
+                                       placeholder="输入股票代码，如: 000001.XSHE">
+                            </div>
+                            <div class="mb-3">
+                                <input type="date" class="form-control" id="startDateInput">
+                            </div>
+                            <div class="mb-3">
+                                <input type="date" class="form-control" id="endDateInput">
+                            </div>
+                            <button class="btn btn-success" onclick="searchStockData()">
+                                <i class="fas fa-search me-2"></i>查询数据
+                            </button>
+                            <div id="stockDataResult" class="mt-3">
+                                <p class="text-muted">输入股票代码和日期范围查询数据</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 交易区域 -->
+    <section class="py-5" id="trading">
+        <div class="container">
+            <h2 class="text-center mb-5">交易管理</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-portfolio me-2"></i>投资组合</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="portfolioInfo">
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-list me-2"></i>持仓信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="positionsInfo">
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 策略区域 -->
+    <section class="py-5 bg-light" id="strategy">
+        <div class="container">
+            <h2 class="text-center mb-5">策略管理</h2>
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-cogs me-2"></i>策略列表</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="strategiesList">
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p>&copy; 2025 量化交易系统 v2.0.0. 基于FastAPI构建.</p>
+            <p>
+                <a href="/docs" class="text-light me-3">API文档</a>
+                <a href="/health" class="text-light me-3">系统状态</a>
+                <a href="#" class="text-light">关于我们</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUptime();
+            loadPortfolioData();
+            loadStrategiesData();
+            loadJQStatus();
+            
+            // 设置默认日期
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            
+            document.getElementById('startDateInput').value = lastMonth.toISOString().split('T')[0];
+            document.getElementById('endDateInput').value = today.toISOString().split('T')[0];
+            
+            // 定时更新
+            setInterval(updateUptime, 1000);
+            setInterval(loadPortfolioData, 30000); // 30秒更新一次
+            setInterval(loadJQStatus, 60000); // 1分钟更新一次
+        });
+
+        // 更新运行时间
+        function updateUptime() {
+            const startTime = new Date('2025-01-27T00:00:00');
+            const now = new Date();
+            const diff = now - startTime;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('uptime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        // 加载投资组合数据
+        async function loadPortfolioData() {
+            try {
+                const response = await fetch('/api/v1/trading/portfolio');
+                const data = await response.json();
+                
+                document.getElementById('portfolioValue').textContent = `¥${data.portfolio.total_value.toLocaleString()}`;
+                document.getElementById('portfolioInfo').innerHTML = `
+                    <p><strong>总价值:</strong> ¥${data.portfolio.total_value.toLocaleString()}</p>
+                    <p><strong>现金:</strong> ¥${data.portfolio.cash.toLocaleString()}</p>
+                    <p><strong>持仓数量:</strong> ${data.portfolio.positions.length}</p>
+                `;
+            } catch (error) {
+                console.error('加载投资组合数据失败:', error);
+            }
+        }
+
+        // 加载策略数据
+        async function loadStrategiesData() {
+            try {
+                const response = await fetch('/api/v1/strategy/list');
+                const data = await response.json();
+                
+                document.getElementById('activeStrategies').textContent = data.strategies.filter(s => s.is_active).length;
+                
+                const strategiesHtml = data.strategies.map(strategy => `
+                    <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <div>
+                            <strong>${strategy.name}</strong>
+                            <br><small class="text-muted">${strategy.description}</small>
+                        </div>
+                        <span class="badge ${strategy.is_active ? 'bg-success' : 'bg-secondary'}">
+                            ${strategy.is_active ? '活跃' : '停用'}
+                        </span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('strategiesList').innerHTML = strategiesHtml;
+            } catch (error) {
+                console.error('加载策略数据失败:', error);
+            }
+        }
+
+        // 加载聚宽状态
+        async function loadJQStatus() {
+            try {
+                const response = await fetch('/api/v1/jq/status');
+                const data = await response.json();
+                
+                const status = data.status;
+                const statusHtml = `
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <span class="status-indicator ${status.is_connected ? 'status-online' : 'status-offline'}"></span>
+                        <span class="fw-bold">${status.is_connected ? '已连接' : '未连接'}</span>
+                    </div>
+                    <p class="mb-1"><strong>状态:</strong> ${status.status}</p>
+                    <p class="mb-1"><strong>用户名:</strong> ${status.username || '未配置'}</p>
+                    <p class="mb-0"><strong>最后检查:</strong> ${new Date(status.last_check).toLocaleString()}</p>
+                `;
+                
+                document.getElementById('jqConnectionStatus').innerHTML = statusHtml;
+                
+                // 更新数据统计
+                if (status.is_connected) {
+                    loadJQDataStats();
+                }
+            } catch (error) {
+                console.error('加载聚宽状态失败:', error);
+                document.getElementById('jqConnectionStatus').innerHTML = '<p class="text-danger">状态检查失败</p>';
+            }
+        }
+
+        // 加载聚宽数据统计
+        async function loadJQDataStats() {
+            try {
+                const response = await fetch('/api/v1/jq/stocks?market=CN');
+                const data = await response.json();
+                
+                document.getElementById('jqDataStats').innerHTML = `
+                    <p><strong>市场:</strong> ${data.market}</p>
+                    <p><strong>股票数量:</strong> ${data.count.toLocaleString()}</p>
+                    <p><strong>更新时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+            } catch (error) {
+                console.error('加载数据统计失败:', error);
+            }
+        }
+
+        // 连接聚宽
+        async function connectJQ() {
+            try {
+                const response = await fetch('/api/v1/jq/connect', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('聚宽连接成功！');
+                    loadJQStatus();
+                } else {
+                    alert(`连接失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('连接聚宽失败:', error);
+                alert('连接失败，请检查网络连接');
+            }
+        }
+
+        // 断开聚宽
+        async function disconnectJQ() {
+            try {
+                const response = await fetch('/api/v1/jq/disconnect', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('聚宽连接已断开');
+                    loadJQStatus();
+                } else {
+                    alert(`断开失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('断开聚宽失败:', error);
+                alert('断开失败，请检查网络连接');
+            }
+        }
+
+        // 加载股票列表
+        async function loadStockList() {
+            const market = document.getElementById('marketSelect').value;
+            
+            try {
+                document.getElementById('stockListResult').innerHTML = '<p>加载中...</p>';
+                
+                const response = await fetch(`/api/v1/jq/stocks?market=${market}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const stocksHtml = data.stocks.map(stock => 
+                        `<span class="badge bg-primary me-1 mb-1">${stock}</span>`
+                    ).join('');
+                    
+                    document.getElementById('stockListResult').innerHTML = `
+                        <p><strong>市场:</strong> ${data.market}</p>
+                        <p><strong>总数:</strong> ${data.count.toLocaleString()}</p>
+                        <p><strong>前100只:</strong></p>
+                        <div>${stocksHtml}</div>
+                    `;
+                } else {
+                    document.getElementById('stockListResult').innerHTML = `<p class="text-danger">获取失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('加载股票列表失败:', error);
+                document.getElementById('stockListResult').innerHTML = '<p class="text-danger">加载失败，请检查网络连接</p>';
+            }
+        }
+
+        // 查询股票数据
+        async function searchStockData() {
+            const stockCode = document.getElementById('stockCodeInput').value.trim();
+            const startDate = document.getElementById('startDateInput').value;
+            const endDate = document.getElementById('endDateInput').value;
+            
+            if (!stockCode) {
+                alert('请输入股票代码');
+                return;
+            }
+            
+            if (!startDate || !endDate) {
+                alert('请选择日期范围');
+                return;
+            }
+            
+            try {
+                document.getElementById('stockDataResult').innerHTML = '<p>查询中...</p>';
+                
+                const response = await fetch(`/api/v1/jq/daily-data/${stockCode}?start_date=${startDate}&end_date=${endDate}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.count > 0) {
+                        const dataHtml = data.data.map(item => `
+                            <div class="border-bottom p-2">
+                                <strong>${item.date || '未知日期'}</strong><br>
+                                <small>开盘: ${item.open} | 最高: ${item.high} | 最低: ${item.low} | 收盘: ${item.close} | 成交量: ${item.volume}</small>
+                            </div>
+                        `).join('');
+                        
+                        document.getElementById('stockDataResult').innerHTML = `
+                            <p><strong>股票代码:</strong> ${data.stock_code}</p>
+                            <p><strong>数据条数:</strong> ${data.count}</p>
+                            <p><strong>日期范围:</strong> ${data.start_date} 至 ${data.end_date}</p>
+                            <div class="mt-2" style="max-height: 300px; overflow-y: auto;">
+                                ${dataHtml}
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('stockDataResult').innerHTML = '<p class="text-muted">该日期范围内无数据</p>';
+                    }
+                } else {
+                    document.getElementById('stockDataResult').innerHTML = `<p class="text-danger">查询失败: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                console.error('查询股票数据失败:', error);
+                document.getElementById('stockDataResult').innerHTML = '<p class="text-danger">查询失败，请检查网络连接</p>';
+            }
+        }
+
+        // 加载持仓数据
+        async function loadPositionsData() {
+            try {
+                const response = await fetch('/api/v1/trading/positions');
+                const data = await response.json();
+                
+                if (data.positions.length === 0) {
+                    document.getElementById('positionsInfo').innerHTML = '<p class="text-muted">暂无持仓</p>';
+                } else {
+                    const positionsHtml = data.positions.map(position => `
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div>
+                                <strong>${position.stock_code}</strong>
+                                <br><small class="text-muted">数量: ${position.quantity}</small>
+                            </div>
+                            <span class="text-primary">¥${position.current_price}</span>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('positionsInfo').innerHTML = positionsHtml;
+                }
+            } catch (error) {
+                console.error('加载持仓数据失败:', error);
+            }
+        }
+
+        // 启动实时行情
+        function loadMarketData() {
+            alert('实时行情功能正在开发中...');
+        }
+
+        // 启动自动交易
+        function startAutoTrading() {
+            alert('自动交易功能正在开发中...');
+        }
+
+        // 运行回测
+        function runBacktest() {
+            alert('策略回测功能正在开发中...');
+        }
+    </script>
+</body>
+</html>

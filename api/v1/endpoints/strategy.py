@@ -3,13 +3,13 @@
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+# from sqlalchemy.ext.asyncio import AsyncSession  # 暂时注释掉
 from typing import List, Optional
 import logging
 
-from core.database import get_db
-from core.security import get_current_user
-from models import User
+# from core.database import get_db  # 暂时注释掉
+# from core.security import get_current_user  # 暂时注释掉
+# from models import User  # 暂时注释掉
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,8 @@ router = APIRouter()
 
 @router.get("/list")
 async def get_strategies(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    # current_user: User = Depends(get_current_user),  # 暂时注释掉
+    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
 ):
     """获取策略列表"""
     try:
@@ -54,8 +54,8 @@ async def create_strategy(
     strategy_type: str,
     description: Optional[str] = None,
     parameters: Optional[dict] = None,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    # current_user: User = Depends(get_current_user),  # 暂时注释掉
+    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
 ):
     """创建策略"""
     try:
@@ -79,8 +79,8 @@ async def run_backtest(
     start_date: str,
     end_date: str,
     initial_capital: float = 1000000.0,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    # current_user: User = Depends(get_current_user),  # 暂时注释掉
+    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
 ):
     """运行策略回测"""
     try:
@@ -105,8 +105,8 @@ async def run_backtest(
 @router.get("/signals")
 async def get_signals(
     strategy_id: Optional[int] = None,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    # current_user: User = Depends(get_current_user),  # 暂时注释掉
+    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
 ):
     """获取交易信号"""
     try:

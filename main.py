@@ -11,38 +11,42 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import time
 import logging
 from contextlib import asynccontextmanager
+import os
 
 # 导入配置和路由
 from core.config import settings
-from core.database import init_db
+# from core.database import init_db  # 暂时注释掉
 from api.v1 import api_router as api_v1
 from api.v2 import api_router as api_v2
 
 # 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# 版本信息
+__version__ = "2.0.0"
+__author__ = "liudong-work"
+__date__ = "2025-01-27"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     # 启动时执行
-    logger.info("🚀 启动量化交易系统 v2.0.0...")
+    logging.info("🚀 启动量化交易系统 v2.0.0...")
     
-    # 初始化数据库
-    await init_db()
-    logger.info("✅ 数据库初始化完成")
+    # 暂时注释掉数据库初始化
+    # await init_db()
+    # logging.info("✅ 数据库初始化完成")
     
     yield
     
     # 关闭时执行
-    logger.info("🔄 关闭量化交易系统...")
+    logging.info("🔄 关闭量化交易系统...")
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -68,6 +72,12 @@ app.add_middleware(
     allowed_hosts=settings.ALLOWED_HOSTS
 )
 
+# 静态文件服务
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 模板配置
+templates = Jinja2Templates(directory="templates")
+
 # 请求计时中间件
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -80,7 +90,7 @@ async def add_process_time_header(request: Request, call_next):
 # 异常处理
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"全局异常: {exc}")
+    logging.error(f"全局异常: {exc}")
     return JSONResponse(
         status_code=500,
         content={"detail": "内部服务器错误", "error": str(exc)}
@@ -96,15 +106,47 @@ async def health_check():
         "timestamp": time.time()
     }
 
-# 根路径
-@app.get("/")
-async def root():
-    """根路径"""
+# 根路径 - 返回Web界面
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """根路径 - 返回Web界面"""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+# Web界面路由
+@app.get("/web", response_class=HTMLResponse)
+async def web_interface(request: Request):
+    """Web界面"""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+# 聚宽演示页面
+@app.get("/jq-demo", response_class=HTMLResponse)
+async def jq_demo(request: Request):
+    """聚宽演示页面"""
+    return templates.TemplateResponse("jq_simple.html", {"request": request})
+
+# 股票列表页面
+@app.get("/stock-table", response_class=HTMLResponse)
+async def stock_table(request: Request):
+    """股票列表页面"""
+    return templates.TemplateResponse("stock_table.html", {"request": request})
+
+# 系统信息
+@app.get("/system")
+async def system_info():
+    """系统信息"""
     return {
-        "message": "欢迎使用量化交易系统 v2.0.0",
+        "name": "量化交易系统",
         "version": "2.0.0",
-        "docs": "/docs",
-        "health": "/health"
+        "status": "running",
+        "uptime": time.time(),
+        "features": [
+            "FastAPI框架",
+            "异步处理",
+            "实时数据",
+            "自动交易",
+            "策略回测",
+            "风险管理"
+        ]
     }
 
 # 注册API路由
