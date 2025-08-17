@@ -67,14 +67,19 @@ class StockScreener:
                     continue
                 
                 # 检查均线金叉
+                # 金叉：短期均线从下方穿越长期均线
                 golden_cross = (latest['MA_short'] > latest['MA_long'] and 
-                               prev['MA_short'] <= prev['MA_long'])
+                               prev['MA_short'] < prev['MA_long'])
                 
                 if golden_cross:
+                    # 计算涨跌幅
+                    change_pct = ((latest['close'] - prev['close']) / prev['close']) * 100
+                    
                     selected_stocks.append({
                         'code': stock_code,
                         'name': self._get_stock_name(stock_code),
                         'price': latest['close'],
+                        'change_pct': change_pct,  # 添加涨跌幅
                         'ma_short': latest['MA_short'],
                         'ma_long': latest['MA_long'],
                         'volume': latest['volume'],
@@ -157,10 +162,14 @@ class StockScreener:
                               prev['MACD'] <= prev['MACD_Signal'])
                 
                 if kdj_golden and macd_golden:
+                    # 计算涨跌幅
+                    change_pct = ((latest['close'] - prev['close']) / prev['close']) * 100
+                    
                     selected_stocks.append({
                         'code': stock_code,
                         'name': self._get_stock_name(stock_code),
                         'price': latest['close'],
+                        'change_pct': change_pct,  # 添加涨跌幅
                         'kdj_k': latest['K'],
                         'kdj_d': latest['D'],
                         'kdj_j': latest['J'],
@@ -231,10 +240,14 @@ class StockScreener:
                 price_breakout = abs(latest['price_change']) > price_change
                 
                 if volume_breakout and price_breakout:
+                    # 计算涨跌幅
+                    change_pct = ((latest['close'] - prev['close']) / prev['close']) * 100
+                    
                     selected_stocks.append({
                         'code': stock_code,
                         'name': self._get_stock_name(stock_code),
                         'price': latest['close'],
+                        'change_pct': change_pct,  # 添加涨跌幅
                         'volume': latest['volume'],
                         'volume_ma5': latest['Volume_MA5'],
                         'volume_ma10': latest['Volume_MA10'],
@@ -290,6 +303,7 @@ class StockScreener:
                 
                 # 获取最新数据
                 latest = data.iloc[-1]
+                prev = data.iloc[-2]  # 获取前一日数据用于计算涨跌幅
                 
                 # 检查价格范围
                 if not (min_price <= latest['close'] <= max_price):
@@ -297,10 +311,14 @@ class StockScreener:
                 
                 # 检查RSI超卖
                 if latest['RSI'] < rsi_threshold:
+                    # 计算涨跌幅
+                    change_pct = ((latest['close'] - prev['close']) / prev['close']) * 100
+                    
                     selected_stocks.append({
                         'code': stock_code,
                         'name': self._get_stock_name(stock_code),
                         'price': latest['close'],
+                        'change_pct': change_pct,  # 添加涨跌幅
                         'rsi': latest['RSI'],
                         'volume': latest['volume'],
                         'strategy': 'RSI超卖策略',

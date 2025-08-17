@@ -110,8 +110,11 @@ class JQDataProvider:
         Returns:
             pd.DataFrame: 日线数据
         """
+        # 只在第一次调用时连接，避免重复连接
         if not self.is_connected:
-            self.connect()
+            if not self.connect():
+                logging.error("聚宽连接失败，无法获取数据")
+                return pd.DataFrame()
         
         if fields is None:
             fields = ['open', 'high', 'low', 'close', 'volume']
@@ -122,6 +125,11 @@ class JQDataProvider:
                           end_date=end_date,
                           frequency='daily',
                           fields=fields)
+            
+            if df is None or df.empty:
+                logging.warning(f"获取{security}日线数据为空")
+                return pd.DataFrame()
+            
             return df
         except Exception as e:
             logging.error(f"获取日线数据失败: {e}")
