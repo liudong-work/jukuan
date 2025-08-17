@@ -1,15 +1,51 @@
-# 聚宽接口配置
+# 量化交易系统 v2.0.0 环境配置示例
+# 复制此文件为 .env 并填写实际配置
+
+# 应用配置
+DEBUG=False
+HOST=0.0.0.0
+PORT=8000
+
+# 安全配置
+SECRET_KEY=your-super-secret-key-here-must-be-at-least-32-characters-long
+
+# 数据库配置
+DATABASE_URL=postgresql+asyncpg://user:password@localhost/jukuan
+REDIS_URL=redis://localhost:6379
+
+# 聚宽配置
 JQ_USERNAME=your_username
 JQ_PASSWORD=your_password
 JQ_TOKEN=your_token
 
-# 数据库配置
-DATABASE_URL=sqlite:///jukuan.db
+# 银河证券配置
+GALAXY_ACCOUNT=your_account
+GALAXY_PASSWORD=your_password
+GALAXY_SERVER_URL=https://your-server.com
 
 # 日志配置
 LOG_LEVEL=INFO
 
-# Web应用配置
-WEB_HOST=0.0.0.0
-WEB_PORT=8050
-WEB_DEBUG=True
+# 交易配置
+MAX_POSITION_SIZE=100000.0
+MAX_SINGLE_POSITION=20000.0
+STOP_LOSS_RATIO=0.05
+TAKE_PROFIT_RATIO=0.15
+
+# 回测配置
+DEFAULT_INITIAL_CAPITAL=1000000.0
+DEFAULT_COMMISSION_RATE=0.0003
+DEFAULT_SLIPPAGE_RATE=0.0001
+
+# 策略配置
+DEFAULT_MA_SHORT_WINDOW=5
+DEFAULT_MA_LONG_WINDOW=20
+DEFAULT_POSITION_SIZE=0.1
+
+# 监控配置
+ENABLE_METRICS=true
+METRICS_PORT=9090
+
+# 缓存配置
+CACHE_TTL=300
+CACHE_MAX_SIZE=1000

@@ -1,96 +1,215 @@
-# 量化交易系统 (Jukuan)
+# 量化交易系统 (Jukuan) v2.0.0
 
-[![Version](https://img.shields.io/badge/version-v1.1.0-blue.svg)](https://github.com/liudong-work/jukuan/releases)
-[![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
-[![Dash](https://img.shields.io/badge/Dash-2.0+-orange.svg)](https://dash.plotly.com/)
+[![Version](https://img.shields.io/badge/version-v2.0.0-blue.svg)](https://github.com/liudong-work/jukuan/releases)
+[![Python](https://img.shields.io/badge/python-3.9+-green.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-orange.svg)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
-> 基于聚宽API的智能量化交易平台，提供完整的策略开发、回测分析和股票筛选功能
+> 🚀 **全新2.0版本** - 基于FastAPI的现代化量化交易平台，提供完整的策略开发、回测分析、自动交易和风险管理功能
 
-## 🚀 最新版本 v1.1.0
+## 🌟 2.0版本重大升级
 
-**发布日期**: 2025-08-17
+### ✨ 全新架构特性
+- **🏗️ 微服务架构** - 模块化设计，易于扩展和维护
+- **🚀 异步处理** - 基于FastAPI的高性能异步框架
+- **💾 数据持久化** - PostgreSQL + Redis 双数据库架构
+- **🔐 安全增强** - JWT认证 + RBAC权限控制
+- **📊 实时监控** - Prometheus + Grafana 监控体系
 
-### ✨ 新功能特性
-- **聚宽登录管理模块化重构** - 完整的登录/退出/状态管理
-- **智能界面状态管理** - 动态界面切换和状态同步
-- **自选股持久化存储** - 本地配置文件和云端同步
-- **高级股票筛选策略** - 多条件智能筛选
-
-### 🔧 技术改进
-- 修复重复组件ID问题
-- 优化回调函数冲突处理
-- 改进错误处理和日志记录
-- 统一聚宽连接状态检查
-
-### 🎨 用户体验提升
-- 界面布局优化和响应式设计
-- 按钮尺寸和间距调整
-- 状态反馈和交互优化
+### 🎯 核心功能升级
+- **📈 实时行情** - WebSocket实时数据推送
+- **🤖 智能交易** - 完整的自动交易执行系统
+- **🛡️ 风险控制** - 多层次风险管理框架
+- **📱 移动端** - 响应式设计，支持多设备访问
+- **🌐 国际化** - 多语言支持
 
 ---
 
 ## 📋 功能特性
 
-- 📊 聚宽实时数据获取（A股、港股、美股、期货等）
-- 🎯 多种交易策略（趋势跟踪、均值回归、机器学习等）
-- 🔍 **智能策略选股**（均线交叉、KDJ+MACD、放量突破、RSI超卖等）
-- 📈 完整的回测引擎
-- 🛡️ 风险管理模块
-- 💹 聚宽实盘交易执行
-- 📊 性能分析和可视化
-- 🌐 Web界面管理
+### 📊 数据管理
+- 聚宽实时数据获取（A股、港股、美股、期货等）
+- WebSocket实时行情推送
+- 历史数据管理和缓存
+- 财务数据和基本面分析
 
-## 聚宽接口优势
+### 🎯 策略系统
+- 多种交易策略（趋势跟踪、均值回归、机器学习等）
+- 智能策略选股（均线交叉、KDJ+MACD、放量突破、RSI超卖等）
+- 策略回测和优化
+- 策略组合管理
 
-- 专业级金融数据（实时行情、财务数据、新闻资讯等）
-- 强大的回测引擎
-- 实盘交易接口
-- 丰富的策略库和社区资源
+### 🤖 自动交易
+- 完整的自动交易执行系统
+- 实时信号生成和处理
+- 智能订单路由和执行
+- 持仓和资金管理
 
-## 安装依赖
+### 🛡️ 风险管理
+- 多层次风险控制框架
+- 实时风险监控和预警
+- 动态风险调整
+- 合规性检查
 
+### 📈 分析工具
+- 完整的回测引擎
+- 性能分析和可视化
+- 实时监控仪表板
+- 报告生成系统
+
+## 🏗️ 技术架构
+
+### 后端架构
+```
+jukuan/
+├── api/                    # FastAPI接口层
+│   ├── v1/               # API版本1
+│   ├── v2/               # API版本2
+│   └── middleware/       # 中间件
+├── core/                  # 核心模块
+│   ├── config/           # 配置管理
+│   ├── security/         # 安全认证
+│   └── database/         # 数据库管理
+├── services/              # 业务服务层
+│   ├── trading/          # 交易服务
+│   ├── strategy/         # 策略服务
+│   ├── risk/             # 风险管理
+│   └── analysis/         # 分析服务
+├── models/                # 数据模型
+├── utils/                 # 工具函数
+└── tests/                 # 测试文件
+```
+
+### 前端架构
+```
+frontend/
+├── components/            # 可复用组件
+├── pages/                 # 页面组件
+├── hooks/                 # 自定义Hooks
+├── services/              # API服务
+├── store/                 # 状态管理
+└── utils/                 # 工具函数
+```
+
+## 🚀 快速开始
+
+### 环境要求
+- Python 3.9+
+- PostgreSQL 13+
+- Redis 6+
+- Node.js 16+
+
+### 安装依赖
+
+#### 后端依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-## 配置聚宽接口
+#### 前端依赖
+```bash
+cd frontend
+npm install
+```
 
-1. 注册聚宽账号：https://www.joinquant.com/
-2. 获取API Token
-3. 创建 `.env` 文件并配置：
+### 配置环境
 
+1. 复制环境配置文件：
+```bash
+cp .env.example .env
+```
+
+2. 配置数据库连接：
+```env
+DATABASE_URL=postgresql://user:password@localhost/jukuan
+REDIS_URL=redis://localhost:6379
+```
+
+3. 配置聚宽接口：
 ```env
 JQ_USERNAME=your_username
 JQ_PASSWORD=your_password
 JQ_TOKEN=your_token
 ```
 
-## 快速开始
+### 启动服务
 
-1. 配置环境变量
-2. 运行示例策略：`python examples/jq_simple_strategy.py`
-3. 运行选股示例：`python examples/stock_screening_example.py`
-4. 启动Web界面：`python app.py`
+#### 启动后端
+```bash
+# 开发模式
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-## 项目结构
-
-```
-jukuan/
-├── src/                    # 核心源代码
-│   ├── data/              # 聚宽数据获取模块
-│   ├── strategies/        # 交易策略
-│   ├── backtest/          # 回测引擎
-│   ├── risk/              # 风险管理
-│   ├── execution/         # 聚宽交易执行
-│   └── analysis/          # 性能分析
-├── examples/              # 示例代码
-├── tests/                 # 测试文件
-├── config/                # 配置文件
-├── data/                  # 数据存储
-└── app.py                 # Web应用入口
+# 生产模式
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
-## 使用说明
+#### 启动前端
+```bash
+cd frontend
+npm run dev
+```
 
-详细使用说明请参考各模块的文档和示例代码。
+#### 启动数据库
+```bash
+# PostgreSQL
+docker run -d --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 postgres:13
+
+# Redis
+docker run -d --name redis -p 6379:6379 redis:6
+```
+
+## 📚 使用说明
+
+### API文档
+启动服务后访问：`http://localhost:8000/docs`
+
+### 示例代码
+查看 `examples/` 目录下的示例代码
+
+### 策略开发
+参考 `docs/strategy_development.md` 进行策略开发
+
+## 🧪 测试
+
+```bash
+# 运行所有测试
+pytest
+
+# 运行特定测试
+pytest tests/test_trading.py
+
+# 生成覆盖率报告
+pytest --cov=src --cov-report=html
+```
+
+## 📦 部署
+
+### Docker部署
+```bash
+docker-compose up -d
+```
+
+### 生产环境部署
+参考 `docs/deployment.md`
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+
+## 📞 联系我们
+
+- 项目主页：https://github.com/liudong-work/jukuan
+- 问题反馈：https://github.com/liudong-work/jukuan/issues
+- 邮箱：liudong.work@example.com
+
+---
+
+**⭐ 如果这个项目对您有帮助，请给我们一个星标！**

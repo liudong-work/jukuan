@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:13
+    container_name: jukuan_postgres
+    environment:
+      POSTGRES_DB: jukuan
+      POSTGRES_USER: jukuan_user
+      POSTGRES_PASSWORD: jukuan_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - jukuan_network
+
+  # Redis缓存
+  redis:
+    image: redis:6-alpine
+    container_name: jukuan_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - jukuan_network
+
+  # 主应用
+  app:
+    build: .
+    container_name: jukuan_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://jukuan_user:jukuan_password@postgres/jukuan
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=your-super-secret-key-here-must-be-at-least-32-characters-long
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - jukuan_network
+    volumes:
+      - ./logs:/app/logs
+
+  # Prometheus监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: jukuan_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - jukuan_network
+
+  # Grafana可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: jukuan_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - jukuan_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  jukuan_network:
+    driver: bridge
