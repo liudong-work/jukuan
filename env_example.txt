@@ -1,0 +1,15 @@
+# 聚宽接口配置
+JQ_USERNAME=your_username
+JQ_PASSWORD=your_password
+JQ_TOKEN=your_token
+
+# 数据库配置
+DATABASE_URL=sqlite:///jukuan.db
+
+# 日志配置
+LOG_LEVEL=INFO
+
+# Web应用配置
+WEB_HOST=0.0.0.0
+WEB_PORT=8050
+WEB_DEBUG=True
