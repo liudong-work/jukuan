@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>策略管理 - 量化交易系统 v2.0.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .strategy-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+        }
+        .strategy-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+        .strategy-item {
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .strategy-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .strategy-active {
+            border-left-color: #28a745;
+        }
+        .strategy-inactive {
+            border-left-color: #6c757d;
+        }
+        .backtest-form {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .indicator-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .parameter-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            margin: 0.25rem;
+            display: inline-block;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left me-2"></i>
+                返回主页
+            </a>
+            <span class="navbar-text">
+                策略管理 - 量化策略与回测
+            </span>
+        </div>
+    </nav>
+
+    <!-- 头部 -->
+    <section class="strategy-header">
+        <div class="container text-center">
+            <h1 class="display-6 fw-bold mb-3">
+                <i class="fas fa-cogs me-3"></i>
+                策略管理
+            </h1>
+            <p class="lead">量化策略管理、技术指标计算、策略回测</p>
+        </div>
+    </section>
+
+    <!-- 主要内容 -->
+    <section class="py-4">
+        <div class="container">
+            <!-- 快速操作 -->
+            <div class="row mb-4">
+                <div class="col-md-12 text-center">
+                    <button class="btn btn-primary btn-lg me-3" data-bs-toggle="modal" data-bs-target="#createStrategyModal">
+                        <i class="fas fa-plus me-2"></i>创建新策略
+                    </button>
+                    <button class="btn btn-success btn-lg me-3" data-bs-toggle="modal" data-bs-target="#backtestModal">
+                        <i class="fas fa-chart-line me-2"></i>运行回测
+                    </button>
+                    <button class="btn btn-info btn-lg" onclick="refreshStrategies()">
+                        <i class="fas fa-sync-alt me-2"></i>刷新策略
+                    </button>
+                </div>
+            </div>
+
+            <!-- 策略列表 -->
+            <div class="strategy-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list me-2"></i>策略列表</h5>
+                </div>
+                <div class="card-body">
+                    <div id="strategiesList">
+                        <p class="text-muted text-center">加载中...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 回测结果 -->
+            <div class="strategy-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar me-2"></i>回测结果</h5>
+                </div>
+                <div class="card-body">
+                    <div id="backtestResults">
+                        <p class="text-muted text-center">暂无回测结果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 创建策略模态框 -->
+    <div class="modal fade" id="createStrategyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">创建新策略</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createStrategyForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">策略名称</label>
+                                    <input type="text" class="form-control" id="strategyName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">策略类型</label>
+                                    <select class="form-select" id="strategyType" required>
+                                        <option value="">选择策略类型</option>
+                                        <option value="ma_cross">均线交叉</option>
+                                        <option value="kdj_macd">KDJ+MACD</option>
+                                        <option value="rsi_strategy">RSI策略</option>
+                                        <option value="custom">自定义</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">策略描述</label>
+                            <textarea class="form-control" id="strategyDescription" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">策略参数 (JSON格式)</label>
+                            <textarea class="form-control" id="strategyParameters" rows="4" placeholder='{"param1": "value1", "param2": "value2"}'></textarea>
+                            <small class="text-muted">请输入有效的JSON格式参数</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="createStrategy()">创建策略</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 回测模态框 -->
+    <div class="modal fade" id="backtestModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">运行策略回测</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="backtestForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">选择策略</label>
+                                    <select class="form-select" id="backtestStrategy" required>
+                                        <option value="">选择策略</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">股票代码</label>
+                                    <input type="text" class="form-control" id="backtestStockCode" placeholder="如: 000001.XSHE" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">开始日期</label>
+                                    <input type="date" class="form-control" id="backtestStartDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">结束日期</label>
+                                    <input type="date" class="form-control" id="backtestEndDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">初始资金</label>
+                            <input type="number" class="form-control" id="backtestCapital" value="100000" min="1000" step="1000" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" onclick="runBacktest()">运行回测</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStrategies();
+            loadBacktestResults();
+            setupDateDefaults();
+        });
+
+        // 设置默认日期
+        function setupDateDefaults() {
+            const today = new Date();
+            const oneMonthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('backtestStartDate').value = oneMonthAgo.toISOString().split('T')[0];
+            document.getElementById('backtestEndDate').value = today.toISOString().split('T')[0];
+        }
+
+        // 加载策略列表
+        async function loadStrategies() {
+            try {
+                const response = await fetch('/api/v1/strategy/list');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayStrategies(data.strategies);
+                    updateBacktestStrategySelect(data.strategies);
+                } else {
+                    console.error('获取策略列表失败:', data.detail);
+                }
+            } catch (error) {
+                console.error('加载策略失败:', error);
+            }
+        }
+
+        // 显示策略列表
+        function displayStrategies(strategies) {
+            const strategiesList = document.getElementById('strategiesList');
+            
+            if (strategies.length === 0) {
+                strategiesList.innerHTML = '<p class="text-muted text-center">暂无策略</p>';
+                return;
+            }
+            
+            const strategiesHtml = strategies.map(strategy => `
+                <div class="strategy-item ${strategy.is_active ? 'strategy-active' : 'strategy-inactive'}">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h6 class="mb-1">${strategy.name}</h6>
+                            <small class="text-muted">${strategy.type}</small>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1">${strategy.description}</p>
+                            <div class="mb-2">
+                                ${Object.entries(strategy.parameters).map(([key, value]) => 
+                                    `<span class="parameter-badge">${key}: ${value}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge ${strategy.is_active ? 'bg-success' : 'bg-secondary'}">
+                                ${strategy.is_active ? '激活' : '未激活'}
+                            </span>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editStrategy(${strategy.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="toggleStrategy(${strategy.id}, ${strategy.is_active})">
+                                    <i class="fas fa-${strategy.is_active ? 'pause' : 'play'}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy(${strategy.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            strategiesList.innerHTML = strategiesHtml;
+        }
+
+        // 更新回测策略选择
+        function updateBacktestStrategySelect(strategies) {
+            const select = document.getElementById('backtestStrategy');
+            select.innerHTML = '<option value="">选择策略</option>';
+            
+            strategies.forEach(strategy => {
+                const option = document.createElement('option');
+                option.value = strategy.id;
+                option.textContent = strategy.name;
+                select.appendChild(option);
+            });
+        }
+
+        // 创建策略
+        async function createStrategy() {
+            const name = document.getElementById('strategyName').value.trim();
+            const type = document.getElementById('strategyType').value;
+            const description = document.getElementById('strategyDescription').value.trim();
+            const parametersText = document.getElementById('strategyParameters').value.trim();
+            
+            if (!name || !type || !description) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            let parameters = {};
+            if (parametersText) {
+                try {
+                    parameters = JSON.parse(parametersText);
+                } catch (e) {
+                    alert('策略参数格式错误，请输入有效的JSON');
+                    return;
+                }
+            }
+            
+            try {
+                const params = new URLSearchParams({
+                    name: name,
+                    strategy_type: type,
+                    description: description
+                });
+                
+                // 添加参数
+                Object.entries(parameters).forEach(([key, value]) => {
+                    params.append(`parameters.${key}`, value);
+                });
+                
+                const response = await fetch(`/api/v1/strategy/create?${params.toString()}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('策略创建成功！');
+                    document.getElementById('createStrategyForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('createStrategyModal')).hide();
+                    
+                    // 刷新策略列表
+                    loadStrategies();
+                } else {
+                    alert(`创建策略失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('创建策略失败:', error);
+                alert('创建策略失败，请检查网络连接');
+            }
+        }
+
+        // 运行回测
+        async function runBacktest() {
+            const strategyId = document.getElementById('backtestStrategy').value;
+            const stockCode = document.getElementById('backtestStockCode').value.trim();
+            const startDate = document.getElementById('backtestStartDate').value;
+            const endDate = document.getElementById('backtestEndDate').value;
+            const capital = parseFloat(document.getElementById('backtestCapital').value);
+            
+            if (!strategyId || !stockCode || !startDate || !endDate) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            try {
+                const params = new URLSearchParams({
+                    stock_code: stockCode,
+                    start_date: startDate,
+                    end_date: endDate,
+                    initial_capital: capital
+                });
+                
+                const response = await fetch(`/api/v1/strategy/${strategyId}/backtest?${params.toString()}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('回测完成！');
+                    bootstrap.Modal.getInstance(document.getElementById('backtestModal')).hide();
+                    
+                    // 刷新回测结果
+                    loadBacktestResults();
+                } else {
+                    alert(`回测失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('运行回测失败:', error);
+                alert('运行回测失败，请检查网络连接');
+            }
+        }
+
+        // 加载回测结果
+        async function loadBacktestResults() {
+            try {
+                const response = await fetch('/api/v1/strategy/backtest/results');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayBacktestResults(data.results);
+                } else {
+                    console.error('获取回测结果失败:', data.detail);
+                }
+            } catch (error) {
+                console.error('加载回测结果失败:', error);
+            }
+        }
+
+        // 显示回测结果
+        function displayBacktestResults(results) {
+            const resultsDiv = document.getElementById('backtestResults');
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-muted text-center">暂无回测结果</p>';
+                return;
+            }
+            
+            const resultsHtml = results.map(result => {
+                const res = result.result;
+                return `
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="indicator-card">
+                                <h6>总收益率</h6>
+                                <h4 class="mb-0">${(res.total_return * 100).toFixed(2)}%</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="indicator-card">
+                                <h6>年化收益率</h6>
+                                <h4 class="mb-0">${(res.annualized_return * 100).toFixed(2)}%</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="indicator-card">
+                                <h6>最大回撤</h6>
+                                <h4 class="mb-0">${(res.max_drawdown * 100).toFixed(2)}%</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="indicator-card">
+                                <h6>夏普比率</h6>
+                                <h4 class="mb-0">${res.sharpe_ratio.toFixed(2)}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p><strong>策略ID:</strong> ${result.strategy_id} | 
+                               <strong>股票代码:</strong> ${result.stock_code} | 
+                               <strong>交易次数:</strong> ${res.trade_count} | 
+                               <strong>胜率:</strong> ${(res.win_rate * 100).toFixed(1)}%</p>
+                            <p><strong>初始资金:</strong> ${formatCurrency(res.initial_capital)} | 
+                               <strong>最终资金:</strong> ${formatCurrency(res.final_capital)} | 
+                               <strong>回测日期:</strong> ${formatDate(res.backtest_date)}</p>
+                        </div>
+                    </div>
+                    <hr>
+                `;
+            }).join('');
+            
+            resultsDiv.innerHTML = resultsHtml;
+        }
+
+        // 编辑策略
+        function editStrategy(strategyId) {
+            alert('编辑策略功能开发中...');
+        }
+
+        // 切换策略状态
+        async function toggleStrategy(strategyId, currentStatus) {
+            try {
+                const response = await fetch(`/api/v1/strategy/${strategyId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        is_active: !currentStatus
+                    })
+                });
+                
+                if (response.ok) {
+                    loadStrategies();
+                } else {
+                    alert('切换策略状态失败');
+                }
+            } catch (error) {
+                console.error('切换策略状态失败:', error);
+            }
+        }
+
+        // 删除策略
+        async function deleteStrategy(strategyId) {
+            if (!confirm('确定要删除这个策略吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/strategy/${strategyId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('策略删除成功！');
+                    loadStrategies();
+                } else {
+                    alert('删除策略失败');
+                }
+            } catch (error) {
+                console.error('删除策略失败:', error);
+            }
+        }
+
+        // 刷新策略
+        function refreshStrategies() {
+            loadStrategies();
+        }
+
+        // 工具函数
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY'
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

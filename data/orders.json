@@ -1,0 +1,16 @@
+{
+  "orders": [
+    {
+      "order_id": "order_4aff1325",
+      "user_id": 1,
+      "stock_code": "000001",
+      "order_type": "market",
+      "order_side": "buy",
+      "quantity": 100,
+      "price": null,
+      "status": "filled",
+      "created_at": "2025-08-18T01:11:58.078042",
+      "updated_at": "2025-08-18T01:11:58.080826"
+    }
+  ]
+}

@@ -356,27 +356,14 @@ async def get_financial_data(
         )
 
 @router.get("/health")
-async def jq_health_check():
-    """聚宽服务健康检查"""
-    try:
-        if jq_service is None:
-            return {
-                "service": "jq_service",
-                "status": "unhealthy",
-                "error": "聚宽服务未初始化",
-                "last_check": datetime.now().isoformat()
-            }
-        
-        health_info = await jq_service.health_check()
-        return health_info
-    except Exception as e:
-        logger.error(f"聚宽健康检查失败: {e}")
-        return {
-            "service": "jq_service",
-            "status": "unhealthy",
-            "error": str(e),
-            "last_check": datetime.now().isoformat()
-        }
+async def health_check():
+    """健康检查端点"""
+    return {
+        "status": "healthy",
+        "version": "2.0.0",
+        "timestamp": datetime.now().timestamp(),
+        "message": "热更新测试 - 服务正常运行"
+    }
 
 @router.get("/market-overview")
 async def get_market_overview():

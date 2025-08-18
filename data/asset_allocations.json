@@ -1,0 +1,15 @@
+{
+  "allocations": [
+    {
+      "allocation_id": "allocation_1",
+      "user_id": 1,
+      "risk_level": "RiskLevel.AGGRESSIVE",
+      "stock_ratio": 0.8,
+      "bond_ratio": 0.1,
+      "cash_ratio": 0.05,
+      "alternative_ratio": 0.05,
+      "rebalance_frequency": "monthly",
+      "created_at": "2025-08-18 08:00:43.457606"
+    }
+  ]
+}

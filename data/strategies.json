@@ -1,0 +1,52 @@
+{
+  "strategies": [
+    {
+      "id": 1,
+      "name": "MA交叉策略",
+      "type": "ma_cross",
+      "description": "双均线交叉策略，短期均线上穿长期均线买入，下穿卖出",
+      "parameters": {
+        "short_period": 5,
+        "long_period": 20,
+        "stop_loss": 0.05,
+        "take_profit": 0.15
+      },
+      "is_active": true,
+      "created_at": "2025-08-18T01:17:15.010309",
+      "updated_at": "2025-08-18T01:17:15.010320"
+    },
+    {
+      "id": 2,
+      "name": "KDJ+MACD策略",
+      "type": "kdj_macd",
+      "description": "KDJ和MACD组合策略，双重确认信号",
+      "parameters": {
+        "kdj_period": 9,
+        "macd_fast": 12,
+        "macd_slow": 26,
+        "macd_signal": 9,
+        "stop_loss": 0.08,
+        "take_profit": 0.2
+      },
+      "is_active": true,
+      "created_at": "2025-08-18T01:17:15.010323",
+      "updated_at": "2025-08-18T01:17:15.010325"
+    },
+    {
+      "id": 3,
+      "name": "RSI超买超卖策略",
+      "type": "rsi_strategy",
+      "description": "RSI超买超卖策略，RSI<30买入，RSI>70卖出",
+      "parameters": {
+        "rsi_period": 14,
+        "oversold": 30,
+        "overbought": 70,
+        "stop_loss": 0.06,
+        "take_profit": 0.12
+      },
+      "is_active": true,
+      "created_at": "2025-08-18T01:17:15.010327",
+      "updated_at": "2025-08-18T07:30:06.489324"
+    }
+  ]
+}

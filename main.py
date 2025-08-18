@@ -130,6 +130,26 @@ async def stock_table(request: Request):
     """股票列表页面"""
     return templates.TemplateResponse("stock_table.html", {"request": request})
 
+@app.get("/trading", response_class=HTMLResponse)
+async def trading_page(request: Request):
+    """交易管理页面"""
+    return templates.TemplateResponse("trading.html", {"request": request})
+
+@app.get("/strategy", response_class=HTMLResponse)
+async def strategy_page(request: Request):
+    """策略管理页面"""
+    return templates.TemplateResponse("strategy.html", {"request": request})
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    """实时监控仪表板"""
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/smart-assistant", response_class=HTMLResponse)
+async def smart_assistant_page(request: Request):
+    """智能交易助手页面"""
+    return templates.TemplateResponse("smart_assistant.html", {"request": request})
+
 # 系统信息
 @app.get("/system")
 async def system_info():

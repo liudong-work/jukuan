@@ -1,0 +1,17 @@
+{
+  "profiles": [
+    {
+      "user_id": 1,
+      "age": 30,
+      "income_level": "medium",
+      "investment_experience": "intermediate",
+      "risk_tolerance": "RiskLevel.MODERATE",
+      "investment_goal": "InvestmentGoal.GROWTH",
+      "investment_horizon": 10,
+      "liquidity_needs": "medium",
+      "tax_situation": "medium",
+      "created_at": "2025-08-18 08:00:43.455930",
+      "updated_at": "2025-08-18 08:00:43.455937"
+    }
+  ]
+}

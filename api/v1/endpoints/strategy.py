@@ -2,45 +2,38 @@
 策略API端点 v1
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-# from sqlalchemy.ext.asyncio import AsyncSession  # 暂时注释掉
-from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Form
+from typing import List, Optional, Dict, Any
 import logging
+import sys
+import os
 
-# from core.database import get_db  # 暂时注释掉
-# from core.security import get_current_user  # 暂时注释掉
-# from models import User  # 暂时注释掉
+# Add project root to Python path for module discovery
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+
+try:
+    from services.strategy_service import strategy_service
+except ImportError:
+    logging.warning("无法导入策略服务，使用模拟服务")
+    strategy_service = None
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 @router.get("/list")
-async def get_strategies(
-    # current_user: User = Depends(get_current_user),  # 暂时注释掉
-    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
-):
+async def get_strategies():
     """获取策略列表"""
     try:
-        # 这里应该实现获取策略列表的逻辑
-        return {
-            "strategies": [
-                {
-                    "id": 1,
-                    "name": "MA交叉策略",
-                    "type": "ma_cross",
-                    "description": "均线交叉策略",
-                    "is_active": True
-                },
-                {
-                    "id": 2,
-                    "name": "KDJ+MACD策略",
-                    "type": "kdj_macd",
-                    "description": "KDJ和MACD组合策略",
-                    "is_active": True
-                }
-            ]
-        }
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        strategies = await strategy_service.get_strategies()
+        return {"strategies": strategies}
+        
     except Exception as e:
         logger.error(f"获取策略列表失败: {e}")
         raise HTTPException(
@@ -48,24 +41,62 @@ async def get_strategies(
             detail="获取策略列表失败"
         )
 
+@router.get("/{strategy_id}")
+async def get_strategy(strategy_id: int):
+    """获取单个策略"""
+    try:
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        strategy = await strategy_service.get_strategy(strategy_id)
+        if not strategy:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="策略不存在"
+            )
+        
+        return strategy
+        
+    except Exception as e:
+        logger.error(f"获取策略失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="获取策略失败"
+        )
+
 @router.post("/create")
 async def create_strategy(
-    name: str,
-    strategy_type: str,
-    description: Optional[str] = None,
-    parameters: Optional[dict] = None,
-    # current_user: User = Depends(get_current_user),  # 暂时注释掉
-    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
+    name: str = Form(..., description="策略名称"),
+    strategy_type: str = Form(..., description="策略类型"),
+    description: str = Form(..., description="策略描述"),
+    parameters: Dict[str, Any] = Form(..., description="策略参数")
 ):
     """创建策略"""
     try:
-        # 这里应该实现创建策略的逻辑
-        return {
-            "message": "策略创建成功",
-            "strategy_id": 123,
-            "name": name,
-            "type": strategy_type
-        }
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        result = await strategy_service.create_strategy(
+            name=name,
+            strategy_type=strategy_type,
+            description=description,
+            parameters=parameters
+        )
+        
+        if "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["error"]
+            )
+        
+        return result
+        
     except Exception as e:
         logger.error(f"创建策略失败: {e}")
         raise HTTPException(
@@ -73,28 +104,95 @@ async def create_strategy(
             detail="创建策略失败"
         )
 
-@router.post("/backtest")
+@router.put("/{strategy_id}")
+async def update_strategy(
+    strategy_id: int,
+    updates: Dict[str, Any]
+):
+    """更新策略"""
+    try:
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        result = await strategy_service.update_strategy(strategy_id, updates)
+        
+        if "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["error"]
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"更新策略失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="更新策略失败"
+        )
+
+@router.delete("/{strategy_id}")
+async def delete_strategy(strategy_id: int):
+    """删除策略"""
+    try:
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        result = await strategy_service.delete_strategy(strategy_id)
+        
+        if "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["error"]
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"删除策略失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="删除策略失败"
+        )
+
+@router.post("/{strategy_id}/backtest")
 async def run_backtest(
     strategy_id: int,
-    start_date: str,
-    end_date: str,
-    initial_capital: float = 1000000.0,
-    # current_user: User = Depends(get_current_user),  # 暂时注释掉
-    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
+    stock_code: str = Query(..., description="股票代码"),
+    start_date: str = Query(..., description="开始日期"),
+    end_date: str = Query(..., description="结束日期"),
+    initial_capital: float = Query(default=100000.0, description="初始资金")
 ):
     """运行策略回测"""
     try:
-        # 这里应该实现回测逻辑
-        return {
-            "message": "回测完成",
-            "strategy_id": strategy_id,
-            "results": {
-                "initial_capital": initial_capital,
-                "final_capital": 1100000.0,
-                "total_return": 0.10,
-                "max_drawdown": 0.05
-            }
-        }
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        result = await strategy_service.run_backtest(
+            strategy_id=strategy_id,
+            stock_code=stock_code,
+            start_date=start_date,
+            end_date=end_date,
+            initial_capital=initial_capital
+        )
+        
+        if "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["error"]
+            )
+        
+        return result
+        
     except Exception as e:
         logger.error(f"运行回测失败: {e}")
         raise HTTPException(
@@ -102,19 +200,54 @@ async def run_backtest(
             detail="运行回测失败"
         )
 
-@router.get("/signals")
-async def get_signals(
-    strategy_id: Optional[int] = None,
-    # current_user: User = Depends(get_current_user),  # 暂时注释掉
-    # db: AsyncSession = Depends(get_db)  # 暂时注释掉
+@router.get("/backtest/results")
+async def get_backtest_results(
+    strategy_id: Optional[int] = Query(None, description="策略ID")
 ):
-    """获取交易信号"""
+    """获取回测结果"""
     try:
-        # 这里应该实现获取信号的逻辑
-        return {"signals": []}
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        results = await strategy_service.get_backtest_results(strategy_id)
+        return {"results": results}
+        
     except Exception as e:
-        logger.error(f"获取交易信号失败: {e}")
+        logger.error(f"获取回测结果失败: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="获取交易信号失败"
+            detail="获取回测结果失败"
+        )
+
+@router.post("/calculate-indicators")
+async def calculate_technical_indicators(
+    prices: List[float] = Query(..., description="价格列表"),
+    volumes: Optional[List[float]] = Query(None, description="成交量列表")
+):
+    """计算技术指标"""
+    try:
+        if strategy_service is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="策略服务不可用"
+            )
+        
+        indicators = await strategy_service.calculate_technical_indicators(prices, volumes)
+        
+        if "error" in indicators:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=indicators["error"]
+            )
+        
+        return indicators
+        
+    except Exception as e:
+        logger.error(f"计算技术指标失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="计算技术指标失败"
         )

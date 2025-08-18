@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时监控仪表板 - 量化交易系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .metric-card.positive {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .metric-card.negative {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        .real-time-update {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .strategy-card {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        .strategy-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .risk-level {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .risk-low { background-color: #d4edda; color: #155724; }
+        .risk-medium { background-color: #fff3cd; color: #856404; }
+        .risk-high { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- 页面标题 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-speedometer2 text-primary"></i>
+                        实时监控仪表板
+                    </h1>
+                    <div class="d-flex align-items-center">
+                        <span class="status-indicator status-online"></span>
+                        <span class="text-muted">系统运行中</span>
+                        <span class="ms-3 text-muted" id="last-update">最后更新: --</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键指标卡片 -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card" id="total-value-card">
+                    <div class="metric-value" id="total-value">¥0</div>
+                    <div class="metric-label">总资产价值</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card" id="pnl-card">
+                    <div class="metric-value" id="unrealized-pnl">¥0</div>
+                    <div class="metric-label">未实现盈亏</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card" id="daily-pnl-card">
+                    <div class="metric-value" id="daily-pnl">¥0</div>
+                    <div class="metric-label">日盈亏</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card" id="risk-level-card">
+                    <div class="metric-value" id="risk-level">--</div>
+                    <div class="metric-label">风险等级</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-graph-up text-success"></i>
+                        投资组合表现趋势
+                    </h5>
+                    <canvas id="portfolioChart" height="100"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-pie-chart text-info"></i>
+                        资产配置分布
+                    </h5>
+                    <canvas id="allocationChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 策略监控和风险指标 -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-robot text-warning"></i>
+                        策略执行状态
+                    </h5>
+                    <div id="strategy-status">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                            <p class="mt-2">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-shield-check text-danger"></i>
+                        风险指标监控
+                    </h5>
+                    <div id="risk-metrics">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                            <p class="mt-2">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 市场概览和实时更新 -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-globe text-primary"></i>
+                        市场概览
+                    </h5>
+                    <div id="market-overview">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                            <p class="mt-2">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-clock-history text-secondary"></i>
+                        实时更新日志
+                    </h5>
+                    <div id="update-log" style="max-height: 300px; overflow-y: auto;">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                            <p class="mt-2">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 智能投顾推荐 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="mb-3">
+                        <i class="bi bi-lightbulb text-warning"></i>
+                        智能投顾推荐
+                    </h5>
+                    <div id="robo-advisor-recommendations">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                            <p class="mt-2">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let portfolioChart, allocationChart;
+        let updateInterval;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadDashboardData();
+            startRealTimeUpdates();
+        });
+
+        // 初始化图表
+        function initializeCharts() {
+            // 投资组合表现趋势图
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            portfolioChart = new Chart(portfolioCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '总资产价值',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: '未实现盈亏',
+                        data: [],
+                        borderColor: '#11998e',
+                        backgroundColor: 'rgba(17, 153, 142, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+
+            // 资产配置分布图
+            const allocationCtx = document.getElementById('allocationChart').getContext('2d');
+            allocationChart = new Chart(allocationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['股票', '现金', '债券', '另类投资'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            '#667eea',
+                            '#11998e',
+                            '#f093fb',
+                            '#ff416c'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载仪表板数据
+        async function loadDashboardData() {
+            try {
+                // 加载投资组合数据
+                await loadPortfolioData();
+                
+                // 加载策略状态
+                await loadStrategyStatus();
+                
+                // 加载风险指标
+                await loadRiskMetrics();
+                
+                // 加载市场概览
+                await loadMarketOverview();
+                
+                // 加载智能投顾推荐
+                await loadRoboAdvisorRecommendations();
+                
+                // 更新最后更新时间
+                updateLastUpdateTime();
+                
+            } catch (error) {
+                console.error('加载仪表板数据失败:', error);
+                showErrorMessage('加载数据失败，请检查网络连接');
+            }
+        }
+
+        // 加载投资组合数据
+        async function loadPortfolioData() {
+            try {
+                const response = await fetch('/api/v1/trading/portfolio');
+                if (!response.ok) throw new Error('获取投资组合失败');
+                
+                const portfolio = await response.json();
+                
+                // 更新关键指标
+                updateMetricCard('total-value', formatCurrency(portfolio.total_value), portfolio.total_value > 0);
+                updateMetricCard('pnl', formatCurrency(portfolio.unrealized_pnl), portfolio.unrealized_pnl >= 0);
+                updateMetricCard('daily-pnl', formatCurrency(portfolio.daily_pnl || 0), (portfolio.daily_pnl || 0) >= 0);
+                
+                // 更新图表数据
+                updatePortfolioChart(portfolio);
+                updateAllocationChart(portfolio);
+                
+            } catch (error) {
+                console.error('加载投资组合数据失败:', error);
+            }
+        }
+
+        // 加载策略状态
+        async function loadStrategyStatus() {
+            try {
+                const response = await fetch('/api/v1/strategy/execution-status');
+                if (!response.ok) throw new Error('获取策略状态失败');
+                
+                const status = await response.json();
+                
+                const statusHtml = `
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 text-primary">${status.queue_size || 0}</div>
+                                <small class="text-muted">信号队列</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 text-success">${status.active_strategies || 0}</div>
+                                <small class="text-muted">活跃策略</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 text-info">${status.execution_history_count || 0}</div>
+                                <small class="text-muted">执行历史</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h4 text-warning">${status.last_execution ? '有' : '无'}</div>
+                                <small class="text-muted">最近执行</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('strategy-status').innerHTML = statusHtml;
+                
+            } catch (error) {
+                console.error('加载策略状态失败:', error);
+            }
+        }
+
+        // 加载风险指标
+        async function loadRiskMetrics() {
+            try {
+                const response = await fetch('/api/v1/trading/risk-metrics');
+                if (!response.ok) throw new Error('获取风险指标失败');
+                
+                const metrics = await response.json();
+                
+                // 更新风险等级
+                updateMetricCard('risk-level', metrics.risk_level || '--', true);
+                
+                const metricsHtml = `
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h6 text-muted">最大回撤</div>
+                                <div class="h5 ${metrics.max_drawdown > 0.1 ? 'text-danger' : 'text-success'}">
+                                    ${(metrics.max_drawdown * 100).toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h6 text-muted">夏普比率</div>
+                                <div class="h5 ${metrics.sharpe_ratio > 1 ? 'text-success' : 'text-warning'}">
+                                    ${metrics.sharpe_ratio.toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h6 text-muted">现金比例</div>
+                                <div class="h5 text-info">
+                                    ${(metrics.cash_ratio * 100).toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h6 text-muted">持仓比例</div>
+                                <div class="h5 text-primary">
+                                    ${(metrics.positions_ratio * 100).toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('risk-metrics').innerHTML = metricsHtml;
+                
+            } catch (error) {
+                console.error('加载风险指标失败:', error);
+            }
+        }
+
+        // 加载市场概览
+        async function loadMarketOverview() {
+            try {
+                const response = await fetch('/api/v1/market/overview');
+                if (!response.ok) throw new Error('获取市场概览失败');
+                
+                const overview = await response.json();
+                
+                let overviewHtml = `
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-${overview.market_status === 'open' ? 'success' : 'secondary'}">
+                                    ${overview.market_status === 'open' ? '市场开放' : '市场关闭'}
+                                </span>
+                                <small class="text-muted">活跃订阅: ${overview.active_subscriptions || 0}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (overview.indices && Object.keys(overview.indices).length > 0) {
+                    overviewHtml += '<div class="row">';
+                    for (const [code, index] of Object.entries(overview.indices)) {
+                        const changeClass = index.change >= 0 ? 'text-success' : 'text-danger';
+                        const changeIcon = index.change >= 0 ? 'bi-arrow-up' : 'bi-arrow-down';
+                        
+                        overviewHtml += `
+                            <div class="col-6 mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">${index.index_name}</small>
+                                    <small class="${changeClass}">
+                                        <i class="bi ${changeIcon}"></i>
+                                        ${index.change_pct.toFixed(2)}%
+                                    </small>
+                                </div>
+                                <div class="h6 mb-0">${index.current_value.toFixed(2)}</div>
+                            </div>
+                        `;
+                    }
+                    overviewHtml += '</div>';
+                }
+                
+                document.getElementById('market-overview').innerHTML = overviewHtml;
+                
+            } catch (error) {
+                console.error('加载市场概览失败:', error);
+            }
+        }
+
+        // 加载智能投顾推荐
+        async function loadRoboAdvisorRecommendations() {
+            try {
+                const response = await fetch('/api/v1/robo-advisor/recommendations');
+                if (!response.ok) throw new Error('获取推荐失败');
+                
+                const recommendations = await response.json();
+                
+                if (recommendations.length === 0) {
+                    document.getElementById('robo-advisor-recommendations').innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-lightbulb-off" style="font-size: 2rem;"></i>
+                            <p class="mt-2">暂无推荐策略</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let recommendationsHtml = '<div class="row">';
+                recommendations.slice(0, 4).forEach(rec => {
+                    const confidenceClass = rec.confidence_score > 0.8 ? 'success' : 
+                                          rec.confidence_score > 0.6 ? 'warning' : 'secondary';
+                    
+                    recommendationsHtml += `
+                        <div class="col-lg-6 col-md-12 mb-3">
+                            <div class="strategy-card">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0">${rec.strategy_name}</h6>
+                                    <span class="badge bg-${confidenceClass}">
+                                        置信度: ${(rec.confidence_score * 100).toFixed(0)}%
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-2">${rec.reasoning}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">预期收益: ${(rec.expected_return * 100).toFixed(1)}%</small>
+                                    <span class="risk-level risk-${rec.risk_level === '保守型' ? 'low' : rec.risk_level === '稳健型' ? 'medium' : 'high'}">
+                                        ${rec.risk_level}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                recommendationsHtml += '</div>';
+                
+                document.getElementById('robo-advisor-recommendations').innerHTML = recommendationsHtml;
+                
+            } catch (error) {
+                console.error('加载智能投顾推荐失败:', error);
+            }
+        }
+
+        // 更新指标卡片
+        function updateMetricCard(id, value, isPositive) {
+            const card = document.getElementById(`${id}-card`);
+            const valueElement = document.getElementById(id);
+            
+            if (card && valueElement) {
+                valueElement.textContent = value;
+                
+                // 移除之前的样式类
+                card.classList.remove('positive', 'negative', 'warning');
+                
+                // 添加新的样式类
+                if (isPositive === true) {
+                    card.classList.add('positive');
+                } else if (isPositive === false) {
+                    card.classList.add('negative');
+                } else {
+                    card.classList.add('warning');
+                }
+            }
+        }
+
+        // 更新投资组合图表
+        function updatePortfolioChart(portfolio) {
+            if (!portfolioChart) return;
+            
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            
+            // 添加新数据点
+            portfolioChart.data.labels.push(timeLabel);
+            portfolioChart.data.datasets[0].data.push(portfolio.total_value);
+            portfolioChart.data.datasets[1].data.push(portfolio.unrealized_pnl);
+            
+            // 保持最近20个数据点
+            if (portfolioChart.data.labels.length > 20) {
+                portfolioChart.data.labels.shift();
+                portfolioChart.data.datasets[0].data.shift();
+                portfolioChart.data.datasets[1].data.shift();
+            }
+            
+            portfolioChart.update('none');
+        }
+
+        // 更新资产配置图表
+        function updateAllocationChart(portfolio) {
+            if (!allocationChart) return;
+            
+            const totalValue = portfolio.total_value || 1;
+            const stockRatio = portfolio.positions_value / totalValue;
+            const cashRatio = portfolio.cash / totalValue;
+            
+            allocationChart.data.datasets[0].data = [
+                stockRatio,
+                cashRatio,
+                0, // 债券比例（暂时设为0）
+                0  // 另类投资比例（暂时设为0）
+            ];
+            
+            allocationChart.update('none');
+        }
+
+        // 启动实时更新
+        function startRealTimeUpdates() {
+            updateInterval = setInterval(() => {
+                loadDashboardData();
+            }, 30000); // 每30秒更新一次
+        }
+
+        // 更新最后更新时间
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN');
+            document.getElementById('last-update').textContent = `最后更新: ${timeString}`;
+        }
+
+        // 格式化货币
+        function formatCurrency(amount) {
+            if (amount === null || amount === undefined) return '¥0';
+            return new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY'
+            }).format(amount);
+        }
+
+        // 显示错误消息
+        function showErrorMessage(message) {
+            // 可以添加一个toast或者alert来显示错误消息
+            console.error(message);
+        }
+
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', function() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+    </script>
+</body>
+</html>

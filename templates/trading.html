@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>交易管理 - 量化交易系统 v2.0.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .trading-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+        }
+        .portfolio-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .trading-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+        .order-form {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .position-item {
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 5px;
+        }
+        .order-item {
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 5px;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left me-2"></i>
+                返回主页
+            </a>
+            <span class="navbar-text">
+                交易管理 - 投资组合与订单管理
+            </span>
+        </div>
+    </nav>
+
+    <!-- 头部 -->
+    <section class="trading-header">
+        <div class="container text-center">
+            <h1 class="display-6 fw-bold mb-3">
+                <i class="fas fa-chart-line me-3"></i>
+                交易管理
+            </h1>
+            <p class="lead">投资组合管理、持仓监控、订单执行</p>
+        </div>
+    </section>
+
+    <!-- 主要内容 -->
+    <section class="py-4">
+        <div class="container">
+            <!-- 投资组合概览 -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="portfolio-card text-center">
+                        <h3><i class="fas fa-wallet me-2"></i>投资组合概览</h3>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h4 id="totalValue">-</h4>
+                                <p>总资产</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 id="cashAmount">-</h4>
+                                <p>现金</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 id="positionsValue">-</h4>
+                                <p>持仓价值</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 id="returnRate">-</h4>
+                                <p>收益率</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 下单区域 -->
+                <div class="col-md-4">
+                    <div class="trading-card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-plus-circle me-2"></i>下单交易</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="orderForm" class="order-form">
+                                <div class="mb-3">
+                                    <label class="form-label">股票代码</label>
+                                    <input type="text" class="form-control" id="stockCode" placeholder="如: 000001.XSHE" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">交易方向</label>
+                                    <select class="form-select" id="orderSide" required>
+                                        <option value="buy">买入</option>
+                                        <option value="sell">卖出</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">订单类型</label>
+                                    <select class="form-select" id="orderType" required>
+                                        <option value="market">市价单</option>
+                                        <option value="limit">限价单</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3" id="priceField" style="display: none;">
+                                    <label class="form-label">价格</label>
+                                    <input type="number" class="form-control" id="orderPrice" step="0.01" min="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">数量</label>
+                                    <input type="number" class="form-control" id="orderQuantity" min="1" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-paper-plane me-2"></i>提交订单
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 持仓信息 -->
+                <div class="col-md-8">
+                    <div class="trading-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-list me-2"></i>持仓信息</h5>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshPositions()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="positionsList">
+                                <p class="text-muted text-center">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 订单列表 -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="trading-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-clipboard-list me-2"></i>订单列表</h5>
+                            <div>
+                                <select class="form-select form-select-sm d-inline-block w-auto me-2" id="orderStatusFilter" onchange="filterOrders()">
+                                    <option value="">全部状态</option>
+                                    <option value="pending">待执行</option>
+                                    <option value="filled">已成交</option>
+                                    <option value="cancelled">已取消</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline-primary" onclick="refreshOrders()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ordersList">
+                                <p class="text-muted text-center">加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPortfolio();
+            loadPositions();
+            loadOrders();
+            
+            // 订单类型变化时显示/隐藏价格字段
+            document.getElementById('orderType').addEventListener('change', function() {
+                const priceField = document.getElementById('priceField');
+                if (this.value === 'limit') {
+                    priceField.style.display = 'block';
+                    document.getElementById('orderPrice').required = true;
+                } else {
+                    priceField.style.display = 'none';
+                    document.getElementById('orderPrice').required = false;
+                }
+            });
+            
+            // 下单表单提交
+            document.getElementById('orderForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                placeOrder();
+            });
+        });
+
+        // 加载投资组合
+        async function loadPortfolio() {
+            try {
+                const response = await fetch('/api/v1/trading/portfolio');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('totalValue').textContent = formatCurrency(data.total_value);
+                    document.getElementById('cashAmount').textContent = formatCurrency(data.cash);
+                    document.getElementById('positionsValue').textContent = formatCurrency(data.positions_value);
+                    
+                    // 计算收益率（这里简化处理）
+                    const returnRate = ((data.total_value - 1000000) / 1000000 * 100).toFixed(2);
+                    document.getElementById('returnRate').textContent = returnRate + '%';
+                } else {
+                    console.error('获取投资组合失败:', data.detail);
+                }
+            } catch (error) {
+                console.error('加载投资组合失败:', error);
+            }
+        }
+
+        // 加载持仓信息
+        async function loadPositions() {
+            try {
+                const response = await fetch('/api/v1/trading/positions');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const positionsList = document.getElementById('positionsList');
+                    
+                    if (data.positions.length === 0) {
+                        positionsList.innerHTML = '<p class="text-muted text-center">暂无持仓</p>';
+                        return;
+                    }
+                    
+                    const positionsHtml = data.positions.map(position => `
+                        <div class="position-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <strong>${position.stock_code}</strong>
+                                </div>
+                                <div class="col-md-2">
+                                    数量: ${position.quantity.toLocaleString()}
+                                </div>
+                                <div class="col-md-2">
+                                    成本: ${formatCurrency(position.avg_price)}
+                                </div>
+                                <div class="col-md-2">
+                                    市值: ${formatCurrency(position.market_value)}
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">${formatDate(position.updated_at)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    positionsList.innerHTML = positionsHtml;
+                } else {
+                    console.error('获取持仓失败:', data.detail);
+                }
+            } catch (error) {
+                console.error('加载持仓失败:', error);
+            }
+        }
+
+        // 加载订单列表
+        async function loadOrders() {
+            try {
+                const response = await fetch('/api/v1/trading/orders');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayOrders(data.orders);
+                } else {
+                    console.error('获取订单失败:', data.detail);
+                }
+            } catch (error) {
+                console.error('加载订单失败:', error);
+            }
+        }
+
+        // 显示订单列表
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('ordersList');
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p class="text-muted text-center">暂无订单</p>';
+                return;
+            }
+            
+            const ordersHtml = orders.map(order => `
+                <div class="order-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <strong>${order.order_id}</strong>
+                        </div>
+                        <div class="col-md-2">
+                            ${order.stock_code}
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge ${getOrderSideClass(order.order_side)}">${getOrderSideText(order.order_side)}</span>
+                        </div>
+                        <div class="col-md-2">
+                            ${order.quantity.toLocaleString()}
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge ${getOrderStatusClass(order.status)}">${getOrderStatusText(order.status)}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder('${order.order_id}')" 
+                                    ${order.status !== 'pending' ? 'disabled' : ''}>
+                                取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            ordersList.innerHTML = ordersHtml;
+        }
+
+        // 下单
+        async function placeOrder() {
+            const stockCode = document.getElementById('stockCode').value.trim();
+            const orderSide = document.getElementById('orderSide').value;
+            const orderType = document.getElementById('orderType').value;
+            const quantity = parseInt(document.getElementById('orderQuantity').value);
+            const price = document.getElementById('orderPrice').value;
+            
+            if (!stockCode || !quantity) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            if (orderType === 'limit' && !price) {
+                alert('限价单必须指定价格');
+                return;
+            }
+            
+            try {
+                const params = new URLSearchParams({
+                    stock_code: stockCode,
+                    order_type: orderType,
+                    quantity: quantity,
+                    order_side: orderSide
+                });
+                
+                if (price) {
+                    params.append('price', price);
+                }
+                
+                const response = await fetch(`/api/v1/trading/order?${params.toString()}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('下单成功！');
+                    document.getElementById('orderForm').reset();
+                    document.getElementById('priceField').style.display = 'none';
+                    
+                    // 刷新数据
+                    loadPortfolio();
+                    loadPositions();
+                    loadOrders();
+                } else {
+                    alert(`下单失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('下单失败:', error);
+                alert('下单失败，请检查网络连接');
+            }
+        }
+
+        // 取消订单
+        async function cancelOrder(orderId) {
+            if (!confirm('确定要取消这个订单吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/trading/cancel-order?order_id=${orderId}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('订单取消成功！');
+                    loadOrders();
+                } else {
+                    alert(`取消订单失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('取消订单失败:', error);
+                alert('取消订单失败，请检查网络连接');
+            }
+        }
+
+        // 刷新持仓
+        function refreshPositions() {
+            loadPositions();
+        }
+
+        // 刷新订单
+        function refreshOrders() {
+            loadOrders();
+        }
+
+        // 筛选订单
+        function filterOrders() {
+            const status = document.getElementById('orderStatusFilter').value;
+            if (status) {
+                fetch(`/api/v1/trading/orders?status=${status}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.orders) {
+                            displayOrders(data.orders);
+                        }
+                    })
+                    .catch(error => console.error('筛选订单失败:', error));
+            } else {
+                loadOrders();
+            }
+        }
+
+        // 工具函数
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY'
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('zh-CN');
+        }
+
+        function getOrderSideClass(side) {
+            return side === 'buy' ? 'bg-success' : 'bg-danger';
+        }
+
+        function getOrderSideText(side) {
+            return side === 'buy' ? '买入' : '卖出';
+        }
+
+        function getOrderStatusClass(status) {
+            const classes = {
+                'pending': 'bg-warning',
+                'filled': 'bg-success',
+                'cancelled': 'bg-secondary'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+
+        function getOrderStatusText(status) {
+            const texts = {
+                'pending': '待执行',
+                'filled': '已成交',
+                'cancelled': '已取消'
+            };
+            return texts[status] || status;
+        }
+    </script>
+</body>
+</html>

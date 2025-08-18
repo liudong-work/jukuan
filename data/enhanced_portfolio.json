@@ -1,0 +1,12 @@
+{
+  "user_id": 1,
+  "total_value": 1000000.0,
+  "cash": 500000.0,
+  "positions_value": 500000.0,
+  "unrealized_pnl": 0.0,
+  "unrealized_pnl_pct": 0.0,
+  "daily_pnl": 0.0,
+  "daily_pnl_pct": 0.0,
+  "created_at": "2025-08-18T07:58:54.709585",
+  "updated_at": "2025-08-18T07:58:54.709598"
+}

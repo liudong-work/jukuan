@@ -1,0 +1,40 @@
+{
+  "results": [
+    {
+      "strategy_id": 4,
+      "stock_code": "000001.XSHE",
+      "result": {
+        "initial_capital": 100000.0,
+        "final_capital": 133733.66510326508,
+        "total_return": 0.3373366510326509,
+        "annualized_return": 0.2329009207129535,
+        "max_drawdown": 0.13116423875249694,
+        "trade_count": 6,
+        "win_rate": 0.5813500607751254,
+        "sharpe_ratio": 1.890640789956602,
+        "start_date": "2024-01-01",
+        "end_date": "2024-12-31",
+        "backtest_date": "2025-08-18T01:32:44.490433"
+      },
+      "created_at": "2025-08-18T01:32:44.490603"
+    },
+    {
+      "strategy_id": 2,
+      "stock_code": "000001",
+      "result": {
+        "initial_capital": 100000.0,
+        "final_capital": 100051.07464648118,
+        "total_return": 0.000510746464811751,
+        "annualized_return": 0.00035262495652756506,
+        "max_drawdown": 0.14522892680447178,
+        "trade_count": 13,
+        "win_rate": 0.5709005627804187,
+        "sharpe_ratio": 1.7933222296670372,
+        "start_date": "2025-07-18",
+        "end_date": "2025-08-17",
+        "backtest_date": "2025-08-18T07:25:18.379844"
+      },
+      "created_at": "2025-08-18T07:25:18.380113"
+    }
+  ]
+}
