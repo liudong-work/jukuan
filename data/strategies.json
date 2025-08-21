@@ -2,51 +2,46 @@
   "strategies": [
     {
       "id": 1,
-      "name": "MA交叉策略",
-      "type": "ma_cross",
-      "description": "双均线交叉策略，短期均线上穿长期均线买入，下穿卖出",
+      "name": "双均线交叉策略",
+      "description": "基于短期和长期均线交叉的经典策略",
+      "type": "trend_following",
+      "status": "active",
       "parameters": {
-        "short_period": 9,
-        "long_period": 20,
-        "stop_loss": 0.05,
-        "take_profit": 0.15
+        "short_period": 5,
+        "long_period": 20
       },
-      "is_active": true,
-      "created_at": "2025-08-18T01:17:15.010309",
-      "updated_at": "2025-08-19T08:31:05.703675"
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2025-08-21T17:02:39.970198"
     },
     {
       "id": 2,
-      "name": "KDJ+MACD策略",
-      "type": "kdj_macd",
-      "description": "KDJ和MACD组合策略，双重确认信号",
+      "name": "KDJ+MACD技术选股策略(优化版)",
+      "description": "基于KDJ和MACD双重技术指标向上，结合基本面筛选的选股策略 - 已优化",
+      "type": "technical_screening",
+      "status": "active",
       "parameters": {
         "kdj_period": 9,
         "macd_fast": 12,
         "macd_slow": 26,
         "macd_signal": 9,
-        "stop_loss": 0.08,
-        "take_profit": 0.2
+        "volume_ranking": "ascending",
+        "exclude_st": true,
+        "exclude_tech_board": true,
+        "exclude_beijing": true,
+        "limit_up_within_days": 19,
+        "dividend_years": 5,
+        "current_no_limit_up": true,
+        "current_no_limit_down": true
       },
-      "is_active": true,
-      "created_at": "2025-08-18T01:17:15.010323",
-      "updated_at": "2025-08-18T01:17:15.010325"
-    },
-    {
-      "id": 3,
-      "name": "RSI超买超卖策略",
-      "type": "rsi_strategy",
-      "description": "RSI超买超卖策略，RSI<30买入，RSI>70卖出",
-      "parameters": {
-        "rsi_period": 14,
-        "oversold": 30,
-        "overbought": 70,
-        "stop_loss": 0.06,
-        "take_profit": 0.12
+      "filters": {
+        "weekly_kdj_up": true,
+        "daily_kdj_up": true,
+        "weekly_macd_up": true,
+        "daily_macd_up": true,
+        "volume_sort": "ascending"
       },
-      "is_active": true,
-      "created_at": "2025-08-18T01:17:15.010327",
-      "updated_at": "2025-08-18T07:30:06.489324"
+      "created_at": "2025-08-21T00:00:00Z",
+      "updated_at": "2025-08-21T17:02:40.974777"
     }
   ]
 }

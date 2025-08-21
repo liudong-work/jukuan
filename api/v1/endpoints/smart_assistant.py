@@ -3,6 +3,7 @@
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Form
+from dataclasses import asdict
 from typing import List, Optional, Dict, Any
 import logging
 import sys

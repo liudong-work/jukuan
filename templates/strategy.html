@@ -265,6 +265,68 @@
         </div>
     </div>
 
+    <!-- 编辑策略模态框 -->
+    <div class="modal fade" id="editStrategyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑策略</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editStrategyForm">
+                        <input type="hidden" id="editStrategyId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editStrategyName" class="form-label">策略名称</label>
+                                    <input type="text" class="form-control" id="editStrategyName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editStrategyType" class="form-label">策略类型</label>
+                                    <select class="form-select" id="editStrategyType" required>
+                                        <option value="trend_following">趋势跟踪</option>
+                                        <option value="technical_screening">技术选股</option>
+                                        <option value="mean_reversion">均值回归</option>
+                                        <option value="momentum">动量策略</option>
+                                        <option value="arbitrage">套利策略</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStrategyDescription" class="form-label">策略描述</label>
+                            <textarea class="form-control" id="editStrategyDescription" rows="3"></textarea>
+                        </div>
+                        
+                        <!-- 策略参数配置 -->
+                        <div class="mb-3">
+                            <label class="form-label">策略参数</label>
+                            <div id="editStrategyParameters">
+                                <!-- 参数将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editStrategyStatus" class="form-label">策略状态</label>
+                            <select class="form-select" id="editStrategyStatus" required>
+                                <option value="active">激活</option>
+                                <option value="inactive">停用</option>
+                                <option value="paused">暂停</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveStrategyChanges()">保存更改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 策略组合模态框 -->
     <div class="modal fade" id="strategyCombinationModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
@@ -348,8 +410,10 @@
                 return;
             }
             
-            const strategiesHtml = strategies.map(strategy => `
-                <div class="strategy-item ${strategy.is_active ? 'strategy-active' : 'strategy-inactive'}">
+            const strategiesHtml = strategies.map(strategy => {
+                const isActive = (strategy.status === 'active') || (strategy.is_active === true);
+                return `
+                <div class="strategy-item ${isActive ? 'strategy-active' : 'strategy-inactive'}">
                     <div class="row align-items-center">
                         <div class="col-md-3">
                             <h6 class="mb-1">${strategy.name}</h6>
@@ -364,8 +428,8 @@
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <span class="badge ${strategy.is_active ? 'bg-success' : 'bg-secondary'}">
-                                ${strategy.is_active ? '激活' : '未激活'}
+                            <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+                                ${isActive ? '激活' : '未激活'}
                             </span>
                         </div>
                         <div class="col-md-3">
@@ -373,8 +437,8 @@
                                 <button class="btn btn-sm btn-outline-primary" onclick="editStrategy(${strategy.id})">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-success" onclick="toggleStrategy(${strategy.id}, ${strategy.is_active})">
-                                    <i class="fas fa-${strategy.is_active ? 'pause' : 'play'}"></i>
+                                <button class="btn btn-sm btn-outline-success" onclick="toggleStrategy(${strategy.id}, ${isActive})">
+                                    <i class="fas fa-${isActive ? 'pause' : 'play'}"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteStrategy(${strategy.id})">
                                     <i class="fas fa-trash"></i>
@@ -382,8 +446,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                </div>`
+            }).join('');
             
             strategiesList.innerHTML = strategiesHtml;
         }
@@ -574,8 +638,130 @@
         }
 
         // 编辑策略
-        function editStrategy(strategyId) {
-            alert('编辑策略功能开发中...');
+        async function editStrategy(strategyId) {
+            try {
+                // 获取策略详情
+                const response = await fetch(`/api/v1/strategy/${strategyId}`);
+                const strategy = await response.json();
+                
+                if (response.ok) {
+                    // 填充编辑表单
+                    document.getElementById('editStrategyId').value = strategy.id;
+                    document.getElementById('editStrategyName').value = strategy.name;
+                    document.getElementById('editStrategyType').value = strategy.type;
+                    document.getElementById('editStrategyDescription').value = strategy.description;
+                    document.getElementById('editStrategyStatus').value = strategy.status;
+                    
+                    // 生成参数配置界面
+                    generateParameterFields(strategy.parameters);
+                    
+                    // 显示编辑模态框
+                    const editModal = new bootstrap.Modal(document.getElementById('editStrategyModal'));
+                    editModal.show();
+                } else {
+                    alert('获取策略详情失败');
+                }
+            } catch (error) {
+                console.error('编辑策略失败:', error);
+                alert('编辑策略失败，请检查网络连接');
+            }
+        }
+        
+        // 生成参数配置字段
+        function generateParameterFields(parameters) {
+            const container = document.getElementById('editStrategyParameters');
+            container.innerHTML = '';
+            
+            if (!parameters) return;
+            
+            Object.entries(parameters).forEach(([key, value]) => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'mb-2';
+                
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.textContent = key;
+                
+                let input;
+                if (typeof value === 'boolean') {
+                    input = document.createElement('select');
+                    input.className = 'form-select';
+                    input.innerHTML = `
+                        <option value="true" ${value ? 'selected' : ''}>是</option>
+                        <option value="false" ${!value ? 'selected' : ''}>否</option>
+                    `;
+                } else if (typeof value === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control';
+                    input.value = value;
+                    input.step = 'any';
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.value = value;
+                }
+                
+                input.name = key;
+                fieldDiv.appendChild(label);
+                fieldDiv.appendChild(input);
+                container.appendChild(fieldDiv);
+            });
+        }
+        
+        // 保存策略更改
+        async function saveStrategyChanges() {
+            try {
+                const strategyId = document.getElementById('editStrategyId').value;
+                
+                // 收集表单数据
+                const formData = {
+                    name: document.getElementById('editStrategyName').value,
+                    type: document.getElementById('editStrategyType').value,
+                    description: document.getElementById('editStrategyDescription').value,
+                    status: document.getElementById('editStrategyStatus').value,
+                    parameters: {}
+                };
+                
+                // 收集参数数据
+                const parameterInputs = document.getElementById('editStrategyParameters').querySelectorAll('input, select');
+                parameterInputs.forEach(input => {
+                    let value = input.value;
+                    if (input.type === 'number') {
+                        value = parseFloat(value);
+                    } else if (input.type === 'select-one' && (value === 'true' || value === 'false')) {
+                        value = value === 'true';
+                    }
+                    formData.parameters[input.name] = value;
+                });
+                
+                // 发送更新请求
+                const response = await fetch(`/api/v1/strategy/${strategyId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    alert('策略更新成功！');
+                    
+                    // 关闭模态框
+                    const editModal = bootstrap.Modal.getInstance(document.getElementById('editStrategyModal'));
+                    editModal.hide();
+                    
+                    // 刷新策略列表
+                    loadStrategies();
+                } else {
+                    const errorData = await response.json();
+                    alert(`更新策略失败: ${errorData.detail}`);
+                }
+            } catch (error) {
+                console.error('保存策略更改失败:', error);
+                alert('保存策略更改失败，请检查网络连接');
+            }
         }
 
         // 切换策略状态
@@ -587,7 +773,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        is_active: !currentStatus
+                        status: !currentStatus ? 'active' : 'inactive'
                     })
                 });
                 
