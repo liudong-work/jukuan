@@ -150,6 +150,16 @@ async def smart_assistant_page(request: Request):
     """智能交易助手页面"""
     return templates.TemplateResponse("smart_assistant.html", {"request": request})
 
+@app.get("/analysis", response_class=HTMLResponse)
+async def analysis_page(request: Request):
+    """分析页面"""
+    return templates.TemplateResponse("analysis.html", {"request": request})
+
+@app.get("/auto-trading", response_class=HTMLResponse)
+async def auto_trading_page(request: Request):
+    """自动交易页面"""
+    return templates.TemplateResponse("auto_trading.html", {"request": request})
+
 # 系统信息
 @app.get("/system")
 async def system_info():

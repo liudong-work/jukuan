@@ -88,14 +88,11 @@ class SmartTradingAssistant:
     """智能交易助手"""
     
     def __init__(self):
-        self.analysis_file = "data/smart_analysis.json"
-        self.insights_file = "data/portfolio_insights.json"
+        self.analysis_file = "data/smart_assistant_analyses.json"
+        self.insights_file = "data/smart_assistant_insights.json"
         
-        # 确保目录存在
-        os.makedirs("data", exist_ok=True)
-        
-        # 初始化数据文件
-        self._init_data_files()
+        # 确保数据文件存在
+        self._ensure_data_files()
         
         logger.info("智能交易助手已启动")
     
@@ -109,6 +106,9 @@ class SmartTradingAssistant:
     def _save_data(self, file_path: str, data: Any):
         """保存数据到文件"""
         try:
+            # 确保目录存在
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2, default=str)
         except Exception as e:
@@ -124,6 +124,184 @@ class SmartTradingAssistant:
         except Exception as e:
             logger.error(f"加载数据失败 {file_path}: {e}")
             return None
+    
+    def _ensure_data_files(self):
+        """确保数据文件存在"""
+        try:
+            # 确保数据目录存在
+            os.makedirs("data", exist_ok=True)
+            
+            # 初始化分析文件
+            if not os.path.exists(self.analysis_file):
+                self._save_data(self.analysis_file, {"analyses": []})
+            
+            # 初始化洞察文件
+            if not os.path.exists(self.insights_file):
+                self._save_data(self.insights_file, {"insights": []})
+                
+        except Exception as e:
+            logger.error(f"初始化数据文件失败: {e}")
+    
+    async def get_analysis_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """获取分析历史"""
+        try:
+            analyses_data = self._load_data(self.analysis_file)
+            if not analyses_data or "analyses" not in analyses_data:
+                return []
+            
+            # 按时间排序并限制数量
+            analyses = sorted(analyses_data["analyses"], 
+                            key=lambda x: x.get("timestamp", ""), 
+                            reverse=True)
+            
+            return analyses[:limit]
+            
+        except Exception as e:
+            logger.error(f"获取分析历史失败: {e}")
+            return []
+    
+    async def get_insight_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """获取洞察历史"""
+        try:
+            insights_data = self._load_data(self.insights_file)
+            if not insights_data or "insights" not in insights_data:
+                return []
+            
+            # 按时间排序并限制数量
+            insights = sorted(insights_data["insights"], 
+                            key=lambda x: x.get("timestamp", ""), 
+                            reverse=True)
+            
+            return insights[:limit]
+            
+        except Exception as e:
+            logger.error(f"获取洞察历史失败: {e}")
+            return []
+    
+    async def clear_old_data(self, days: int = 30):
+        """清理旧数据"""
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            # 清理分析数据
+            analyses_data = self._load_data(self.analysis_file)
+            if analyses_data and "analyses" in analyses_data:
+                analyses_data["analyses"] = [
+                    a for a in analyses_data["analyses"]
+                    if datetime.fromisoformat(a.get("timestamp", "")) > cutoff_date
+                ]
+                self._save_data(self.analysis_file, analyses_data)
+            
+            # 清理洞察数据
+            insights_data = self._load_data(self.insights_file)
+            if insights_data and "insights" in insights_data:
+                insights_data["insights"] = [
+                    i for i in insights_data["insights"]
+                    if datetime.fromisoformat(i.get("timestamp", "")) > cutoff_date
+                ]
+                self._save_data(self.insights_file, insights_data)
+            
+            logger.info(f"已清理{days}天前的数据")
+            
+        except Exception as e:
+            logger.error(f"清理旧数据失败: {e}")
+    
+    async def get_system_status(self) -> Dict[str, Any]:
+        """获取系统状态"""
+        try:
+            status = {
+                "timestamp": datetime.now().isoformat(),
+                "service_status": "running",
+                "data_files": {
+                    "analysis_file": os.path.exists(self.analysis_file),
+                    "insights_file": os.path.exists(self.insights_file)
+                },
+                "data_counts": {
+                    "analyses": 0,
+                    "insights": 0
+                },
+                "last_analysis": None,
+                "last_insight": None
+            }
+            
+            # 统计数据量
+            analyses_data = self._load_data(self.analysis_file)
+            if analyses_data and "analyses" in analyses_data:
+                status["data_counts"]["analyses"] = len(analyses_data["analyses"])
+                if analyses_data["analyses"]:
+                    status["last_analysis"] = analyses_data["analyses"][-1].get("timestamp")
+            
+            insights_data = self._load_data(self.insights_file)
+            if insights_data and "insights" in insights_data:
+                status["data_counts"]["insights"] = len(insights_data["insights"])
+                if insights_data["insights"]:
+                    status["last_insight"] = insights_data["insights"][-1].get("timestamp")
+            
+            return status
+            
+        except Exception as e:
+            logger.error(f"获取系统状态失败: {e}")
+            return {
+                "timestamp": datetime.now().isoformat(),
+                "service_status": "error",
+                "error": str(e)
+            }
+    
+    async def backup_data(self, backup_dir: str = "backups") -> Dict[str, Any]:
+        """备份数据"""
+        try:
+            import shutil
+            from datetime import datetime
+            
+            # 创建备份目录
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = os.path.join(backup_dir, f"smart_assistant_{timestamp}")
+            os.makedirs(backup_path, exist_ok=True)
+            
+            # 备份数据文件
+            if os.path.exists(self.analysis_file):
+                shutil.copy2(self.analysis_file, backup_path)
+            
+            if os.path.exists(self.insights_file):
+                shutil.copy2(self.insights_file, backup_path)
+            
+            return {
+                "message": "数据备份成功",
+                "backup_path": backup_path,
+                "timestamp": timestamp
+            }
+            
+        except Exception as e:
+            logger.error(f"数据备份失败: {e}")
+            return {"error": f"数据备份失败: {e}"}
+    
+    async def restore_data(self, backup_path: str) -> Dict[str, Any]:
+        """恢复数据"""
+        try:
+            import shutil
+            
+            if not os.path.exists(backup_path):
+                return {"error": "备份路径不存在"}
+            
+            # 恢复数据文件
+            backup_files = os.listdir(backup_path)
+            
+            for file_name in backup_files:
+                if file_name.endswith('.json'):
+                    source_file = os.path.join(backup_path, file_name)
+                    if "analysis" in file_name:
+                        shutil.copy2(source_file, self.analysis_file)
+                    elif "insight" in file_name:
+                        shutil.copy2(source_file, self.insights_file)
+            
+            return {
+                "message": "数据恢复成功",
+                "restored_files": backup_files
+            }
+            
+        except Exception as e:
+            logger.error(f"数据恢复失败: {e}")
+            return {"error": f"数据恢复失败: {e}"}
     
     async def analyze_market_sentiment(self) -> MarketAnalysis:
         """分析市场情绪"""

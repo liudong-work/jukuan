@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分析板块 - 量化交易系统 v2.0.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>
+                量化交易系统 v2.0.0
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">实时监控</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/jq-demo">聚宽数据</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stock-table">股票表格</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/trading">交易管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/strategy">策略管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/analysis">分析</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/docs">API文档</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- 左侧导航 -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-bar me-2"></i>分析功能</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="#market-analysis" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                                <i class="fas fa-globe me-2"></i>市场分析
+                            </a>
+                            <a href="#stock-analysis" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-chart-line me-2"></i>个股分析
+                            </a>
+                            <a href="#portfolio-analysis" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-pie-chart me-2"></i>组合分析
+                            </a>
+                            <a href="#risk-analysis" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-shield-alt me-2"></i>风险分析
+                            </a>
+                            <a href="#smart-analysis" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-robot me-2"></i>智能分析
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧内容 -->
+            <div class="col-md-9">
+                <div class="tab-content">
+                    <!-- 市场分析 -->
+                    <div class="tab-pane fade show active" id="market-analysis">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-globe me-2"></i>市场分析</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>市场情绪</h6>
+                                        <div id="marketSentiment" class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>恐慌指数:</span>
+                                                <span class="badge bg-warning">中等</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>市场热度:</span>
+                                                <span class="badge bg-success">活跃</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm" onclick="analyzeMarket()">
+                                            <i class="fas fa-sync-alt me-1"></i>更新分析
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>主要指数</h6>
+                                        <div id="marketIndices">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>上证指数:</span>
+                                                <span class="text-success">+1.2%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>深证成指:</span>
+                                                <span class="text-danger">-0.8%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>创业板指:</span>
+                                                <span class="text-success">+2.1%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <canvas id="marketChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 个股分析 -->
+                    <div class="tab-pane fade" id="stock-analysis">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-line me-2"></i>个股分析</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="stockCode" class="form-label">股票代码</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="stockCode" placeholder="如: 000001">
+                                            <button class="btn btn-primary" onclick="analyzeStock()">
+                                                <i class="fas fa-search me-1"></i>分析
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="stockAnalysisResult">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                        <p>请输入股票代码开始分析</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 组合分析 -->
+                    <div class="tab-pane fade" id="portfolio-analysis">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-pie-chart me-2"></i>组合分析</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>组合表现</h6>
+                                        <div id="portfolioPerformance">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>总收益率:</span>
+                                                <span class="text-success">+15.6%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>年化收益率:</span>
+                                                <span class="text-success">+12.3%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>最大回撤:</span>
+                                                <span class="text-danger">-8.2%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>夏普比率:</span>
+                                                <span class="text-success">1.45</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm" onclick="analyzePortfolio()">
+                                            <i class="fas fa-sync-alt me-1"></i>更新分析
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>资产配置</h6>
+                                        <canvas id="portfolioChart" width="300" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风险分析 -->
+                    <div class="tab-pane fade" id="risk-analysis">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-shield-alt me-2"></i>风险分析</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>风险指标</h6>
+                                        <div id="riskMetrics">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>VaR (95%):</span>
+                                                <span class="text-warning">5.2%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>Beta:</span>
+                                                <span class="text-info">1.1</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>波动率:</span>
+                                                <span class="text-warning">18.5%</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>相关性:</span>
+                                                <span class="text-info">0.72</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>风险分布</h6>
+                                        <canvas id="riskChart" width="300" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 智能分析 -->
+                    <div class="tab-pane fade" id="smart-analysis">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-robot me-2"></i>智能分析</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>AI交易建议</h6>
+                                        <div id="aiAdvice" class="mb-3">
+                                            <div class="alert alert-info">
+                                                <strong>买入建议:</strong> 000001 平安银行
+                                                <br><small>基于技术面和基本面分析，建议买入</small>
+                                            </div>
+                                            <div class="alert alert-warning">
+                                                <strong>卖出建议:</strong> 000002 万科A
+                                                <br><small>技术指标显示超买，建议减仓</small>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm" onclick="getAIAdvice()">
+                                            <i class="fas fa-magic me-1"></i>获取建议
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>市场洞察</h6>
+                                        <div id="marketInsights">
+                                            <div class="card mb-2">
+                                                <div class="card-body p-2">
+                                                    <small class="text-muted">2025-08-21</small>
+                                                    <p class="mb-1">科技股板块轮动明显，建议关注半导体相关个股</p>
+                                                </div>
+                                            </div>
+                                            <div class="card mb-2">
+                                                <div class="card-body p-2">
+                                                    <small class="text-muted">2025-08-20</small>
+                                                    <p class="mb-1">消费板块估值处于历史低位，具备配置价值</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 页面加载完成后初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadInitialData();
+        });
+
+        // 初始化图表
+        function initializeCharts() {
+            // 市场趋势图
+            const marketCtx = document.getElementById('marketChart').getContext('2d');
+            new Chart(marketCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '上证指数',
+                        data: [3200, 3250, 3300, 3280, 3350, 3400],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '市场趋势分析'
+                        }
+                    }
+                }
+            });
+
+            // 组合配置图
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            new Chart(portfolioCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['股票', '债券', '现金', '其他'],
+                    datasets: [{
+                        data: [60, 25, 10, 5],
+                        backgroundColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 205, 86)',
+                            'rgb(75, 192, 192)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '资产配置'
+                        }
+                    }
+                }
+            });
+
+            // 风险分布图
+            const riskCtx = document.getElementById('riskChart').getContext('2d');
+            new Chart(riskCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['低风险', '中风险', '高风险'],
+                    datasets: [{
+                        label: '风险分布',
+                        data: [30, 50, 20],
+                        backgroundColor: [
+                            'rgb(75, 192, 192)',
+                            'rgb(255, 205, 86)',
+                            'rgb(255, 99, 132)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '风险分布'
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载初始数据
+        async function loadInitialData() {
+            try {
+                // 加载市场分析数据
+                const marketResponse = await fetch('/api/v1/smart-assistant/market-sentiment');
+                if (marketResponse.ok) {
+                    const marketData = await marketResponse.json();
+                    updateMarketSentiment(marketData);
+                }
+
+                // 加载组合分析数据
+                const portfolioResponse = await fetch('/api/v1/analysis/performance');
+                if (portfolioResponse.ok) {
+                    const portfolioData = await portfolioResponse.json();
+                    updatePortfolioPerformance(portfolioData);
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        // 分析市场
+        async function analyzeMarket() {
+            try {
+                const response = await fetch('/api/v1/smart-assistant/market-sentiment');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateMarketSentiment(data);
+                    alert('市场分析更新成功！');
+                } else {
+                    alert('市场分析更新失败');
+                }
+            } catch (error) {
+                console.error('市场分析失败:', error);
+                alert('市场分析失败，请检查网络连接');
+            }
+        }
+
+        // 分析个股
+        async function analyzeStock() {
+            const stockCode = document.getElementById('stockCode').value.trim();
+            if (!stockCode) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/smart-assistant/stock-analysis/${stockCode}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayStockAnalysis(data);
+                } else {
+                    alert('个股分析失败');
+                }
+            } catch (error) {
+                console.error('个股分析失败:', error);
+                alert('个股分析失败，请检查网络连接');
+            }
+        }
+
+        // 分析组合
+        async function analyzePortfolio() {
+            try {
+                const response = await fetch('/api/v1/analysis/performance');
+                if (response.ok) {
+                    const data = await response.json();
+                    updatePortfolioPerformance(data);
+                    alert('组合分析更新成功！');
+                } else {
+                    alert('组合分析更新失败');
+                }
+            } catch (error) {
+                console.error('组合分析失败:', error);
+                alert('组合分析失败，请检查网络连接');
+            }
+        }
+
+        // 获取AI建议
+        async function getAIAdvice() {
+            try {
+                const response = await fetch('/api/v1/smart-assistant/trading-advice');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateAIAdvice(data);
+                    alert('AI建议更新成功！');
+                } else {
+                    alert('获取AI建议失败');
+                }
+            } catch (error) {
+                console.error('获取AI建议失败:', error);
+                alert('获取AI建议失败，请检查网络连接');
+            }
+        }
+
+        // 更新市场情绪
+        function updateMarketSentiment(data) {
+            // 这里可以根据实际数据更新UI
+            console.log('市场情绪数据:', data);
+        }
+
+        // 更新组合表现
+        function updatePortfolioPerformance(data) {
+            // 这里可以根据实际数据更新UI
+            console.log('组合表现数据:', data);
+        }
+
+        // 显示个股分析结果
+        function displayStockAnalysis(data) {
+            const resultDiv = document.getElementById('stockAnalysisResult');
+            resultDiv.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>技术面分析</h6>
+                        <div class="mb-2">
+                            <span>趋势:</span>
+                            <span class="badge bg-success">上升</span>
+                        </div>
+                        <div class="mb-2">
+                            <span>支撑位:</span>
+                            <span class="text-primary">12.50</span>
+                        </div>
+                        <div class="mb-2">
+                            <span>阻力位:</span>
+                            <span class="text-warning">13.80</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>基本面分析</h6>
+                        <div class="mb-2">
+                            <span>PE:</span>
+                            <span class="text-info">15.6</span>
+                        </div>
+                        <div class="mb-2">
+                            <span>PB:</span>
+                            <span class="text-info">1.2</span>
+                        </div>
+                        <div class="mb-2">
+                            <span>ROE:</span>
+                            <span class="text-success">12.5%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>投资建议</h6>
+                    <div class="alert alert-info">
+                        <strong>建议:</strong> 技术面良好，基本面稳健，建议持有或逢低买入
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新AI建议
+        function updateAIAdvice(data) {
+            // 这里可以根据实际数据更新UI
+            console.log('AI建议数据:', data);
+        }
+    </script>
+</body>
+</html>

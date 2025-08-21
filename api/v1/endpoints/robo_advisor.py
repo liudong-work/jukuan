@@ -87,6 +87,9 @@ async def get_user_profile(user_id: int):
         
         return profile
         
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
     except Exception as e:
         logger.error(f"获取用户画像失败: {e}")
         raise HTTPException(

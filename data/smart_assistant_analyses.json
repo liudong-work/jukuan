@@ -1,0 +1,172 @@
+{
+  "analyses": [
+    {
+      "timestamp": "2025-08-18 20:51:10.307874",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 20:58:05.497690",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 20:58:05.501709",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:21:54.861140",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:21:54.892957",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:22:00.035027",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:22:00.052752",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:22:00.755968",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:22:00.760436",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-18 21:27:24.492039",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-21 16:36:17.135917",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-21 16:36:31.597834",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-21 16:36:34.893745",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    },
+    {
+      "timestamp": "2025-08-21 16:36:46.758800",
+      "market_sentiment": "MarketSentiment.NEUTRAL",
+      "confidence_score": 0.6,
+      "key_factors": [
+        "市场波动正常",
+        "成交量适中"
+      ],
+      "risk_level": "中",
+      "opportunity_level": "中",
+      "summary": "市场情绪中性，建议观望为主"
+    }
+  ]
+}

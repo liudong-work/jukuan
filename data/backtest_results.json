@@ -23,18 +23,54 @@
       "stock_code": "000001",
       "result": {
         "initial_capital": 100000.0,
-        "final_capital": 100051.07464648118,
-        "total_return": 0.000510746464811751,
-        "annualized_return": 0.00035262495652756506,
-        "max_drawdown": 0.14522892680447178,
-        "trade_count": 13,
-        "win_rate": 0.5709005627804187,
-        "sharpe_ratio": 1.7933222296670372,
-        "start_date": "2025-07-18",
-        "end_date": "2025-08-17",
-        "backtest_date": "2025-08-18T07:25:18.379844"
+        "final_capital": 131857.78086589233,
+        "total_return": 0.3185778086589232,
+        "annualized_return": 0.21994961036177713,
+        "max_drawdown": 0.14697340176526558,
+        "trade_count": 5,
+        "win_rate": 0.6818755133982657,
+        "sharpe_ratio": 1.8875464194779696,
+        "start_date": "2025-07-22",
+        "end_date": "2025-08-21",
+        "backtest_date": "2025-08-21T16:16:20.992421"
       },
-      "created_at": "2025-08-18T07:25:18.380113"
+      "created_at": "2025-08-21T16:16:20.992892"
+    },
+    {
+      "strategy_id": 1,
+      "stock_code": "000001",
+      "result": {
+        "initial_capital": 100000.0,
+        "final_capital": 117715.61698344979,
+        "total_return": 0.1771561698344979,
+        "annualized_return": 0.12231056109121498,
+        "max_drawdown": 0.17129258627655933,
+        "trade_count": 19,
+        "win_rate": 0.5647379313233615,
+        "sharpe_ratio": 0.7736239464268546,
+        "start_date": "2025-07-22",
+        "end_date": "2025-08-21",
+        "backtest_date": "2025-08-21T16:19:55.452787"
+      },
+      "created_at": "2025-08-21T16:19:55.453347"
+    },
+    {
+      "strategy_id": 3,
+      "stock_code": "000001",
+      "result": {
+        "initial_capital": 100000.0,
+        "final_capital": 89165.80263164215,
+        "total_return": -0.10834197368357854,
+        "annualized_return": -0.07480048594044326,
+        "max_drawdown": 0.08585200013341149,
+        "trade_count": 6,
+        "win_rate": 0.624010224917628,
+        "sharpe_ratio": 1.2105688884125032,
+        "start_date": "2025-07-22",
+        "end_date": "2025-08-21",
+        "backtest_date": "2025-08-21T16:16:36.290713"
+      },
+      "created_at": "2025-08-21T16:16:36.290839"
     }
   ]
 }

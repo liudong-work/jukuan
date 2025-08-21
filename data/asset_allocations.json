@@ -10,6 +10,39 @@
       "alternative_ratio": 0.05,
       "rebalance_frequency": "monthly",
       "created_at": "2025-08-18 08:00:43.457606"
+    },
+    {
+      "allocation_id": "allocation_1",
+      "user_id": 1,
+      "risk_level": "RiskLevel.AGGRESSIVE",
+      "stock_ratio": 0.8,
+      "bond_ratio": 0.1,
+      "cash_ratio": 0.05,
+      "alternative_ratio": 0.05,
+      "rebalance_frequency": "monthly",
+      "created_at": "2025-08-18 08:25:33.086579"
+    },
+    {
+      "allocation_id": "allocation_1",
+      "user_id": 1,
+      "risk_level": "RiskLevel.AGGRESSIVE",
+      "stock_ratio": 0.8,
+      "bond_ratio": 0.1,
+      "cash_ratio": 0.05,
+      "alternative_ratio": 0.05,
+      "rebalance_frequency": "monthly",
+      "created_at": "2025-08-18 20:41:01.365809"
+    },
+    {
+      "allocation_id": "allocation_999",
+      "user_id": 999,
+      "risk_level": "RiskLevel.MODERATE",
+      "stock_ratio": 0.5,
+      "bond_ratio": 0.35,
+      "cash_ratio": 0.1,
+      "alternative_ratio": 0.05,
+      "rebalance_frequency": "monthly",
+      "created_at": "2025-08-18 21:27:24.489351"
     }
   ]
 }

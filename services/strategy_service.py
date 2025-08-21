@@ -11,8 +11,60 @@ import json
 import os
 import numpy as np
 import pandas as pd
+from dataclasses import dataclass, asdict
+from enum import Enum
+from dataclasses import dataclass, asdict
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+class StrategyType(Enum):
+    """策略类型枚举"""
+    MA_CROSS = "ma_cross"
+    KDJ_MACD = "kdj_macd"
+    RSI_STRATEGY = "rsi_strategy"
+    BOLLINGER_BANDS = "bollinger_bands"
+    VOLUME_BREAKOUT = "volume_breakout"
+    MOMENTUM = "momentum"
+    MEAN_REVERSION = "mean_reversion"
+    ARBITRAGE = "arbitrage"
+    PAIRS_TRADING = "pairs_trading"
+    GRID_TRADING = "grid_trading"
+
+class StrategyStatus(Enum):
+    """策略状态枚举"""
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PAUSED = "paused"
+    ERROR = "error"
+    OPTIMIZING = "optimizing"
+
+@dataclass
+class StrategyPerformance:
+    """策略性能数据类"""
+    total_return: float
+    annualized_return: float
+    max_drawdown: float
+    sharpe_ratio: float
+    sortino_ratio: float
+    calmar_ratio: float
+    win_rate: float
+    profit_factor: float
+    trade_count: int
+    avg_trade_return: float
+    max_consecutive_losses: int
+    volatility: float
+    beta: float
+    alpha: float
+
+@dataclass
+class StrategyValidation:
+    """策略验证结果"""
+    is_valid: bool
+    errors: List[str]
+    warnings: List[str]
+    risk_score: float
+    complexity_score: float
 
 class StrategyService:
     """策略服务类"""
@@ -20,6 +72,8 @@ class StrategyService:
     def __init__(self):
         self.strategies_file = "data/strategies.json"
         self.backtest_results_file = "data/backtest_results.json"
+        self.strategy_performance_file = "data/strategy_performance.json"
+        self.strategy_combinations_file = "data/strategy_combinations.json"
         self._ensure_data_dir()
         self._init_default_strategies()
     
@@ -35,22 +89,26 @@ class StrategyService:
                     {
                         "id": 1,
                         "name": "MA交叉策略",
-                        "type": "ma_cross",
+                        "type": StrategyType.MA_CROSS.value,
                         "description": "双均线交叉策略，短期均线上穿长期均线买入，下穿卖出",
                         "parameters": {
                             "short_period": 5,
                             "long_period": 20,
                             "stop_loss": 0.05,
-                            "take_profit": 0.15
+                            "take_profit": 0.15,
+                            "position_size": 0.1
                         },
-                        "is_active": True,
+                        "status": StrategyStatus.ACTIVE.value,
+                        "risk_level": "medium",
+                        "expected_return": 0.15,
+                        "max_drawdown": 0.20,
                         "created_at": datetime.now().isoformat(),
                         "updated_at": datetime.now().isoformat()
                     },
                     {
                         "id": 2,
                         "name": "KDJ+MACD策略",
-                        "type": "kdj_macd",
+                        "type": StrategyType.KDJ_MACD.value,
                         "description": "KDJ和MACD组合策略，双重确认信号",
                         "parameters": {
                             "kdj_period": 9,
@@ -58,25 +116,71 @@ class StrategyService:
                             "macd_slow": 26,
                             "macd_signal": 9,
                             "stop_loss": 0.08,
-                            "take_profit": 0.20
+                            "take_profit": 0.20,
+                            "position_size": 0.15
                         },
-                        "is_active": True,
+                        "status": StrategyStatus.ACTIVE.value,
+                        "risk_level": "high",
+                        "expected_return": 0.25,
+                        "max_drawdown": 0.30,
                         "created_at": datetime.now().isoformat(),
                         "updated_at": datetime.now().isoformat()
                     },
                     {
                         "id": 3,
                         "name": "RSI超买超卖策略",
-                        "type": "rsi_strategy",
+                        "type": StrategyType.RSI_STRATEGY.value,
                         "description": "RSI超买超卖策略，RSI<30买入，RSI>70卖出",
                         "parameters": {
                             "rsi_period": 14,
                             "oversold": 30,
                             "overbought": 70,
                             "stop_loss": 0.06,
-                            "take_profit": 0.12
+                            "take_profit": 0.12,
+                            "position_size": 0.08
                         },
-                        "is_active": False,
+                        "status": StrategyStatus.INACTIVE.value,
+                        "risk_level": "low",
+                        "expected_return": 0.10,
+                        "max_drawdown": 0.15,
+                        "created_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat()
+                    },
+                    {
+                        "id": 4,
+                        "name": "布林带突破策略",
+                        "type": StrategyType.BOLLINGER_BANDS.value,
+                        "description": "价格突破布林带上轨买入，跌破下轨卖出",
+                        "parameters": {
+                            "period": 20,
+                            "std_dev": 2.0,
+                            "stop_loss": 0.05,
+                            "take_profit": 0.15,
+                            "position_size": 0.12
+                        },
+                        "status": StrategyStatus.ACTIVE.value,
+                        "risk_level": "medium",
+                        "expected_return": 0.18,
+                        "max_drawdown": 0.22,
+                        "created_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat()
+                    },
+                    {
+                        "id": 5,
+                        "name": "放量突破策略",
+                        "type": StrategyType.VOLUME_BREAKOUT.value,
+                        "description": "成交量放大突破关键价位时买入",
+                        "parameters": {
+                            "volume_multiplier": 2.0,
+                            "price_threshold": 0.02,
+                            "stop_loss": 0.04,
+                            "take_profit": 0.12,
+                            "position_size": 0.10
+                        },
+                        "status": StrategyStatus.ACTIVE.value,
+                        "risk_level": "high",
+                        "expected_return": 0.22,
+                        "max_drawdown": 0.25,
                         "created_at": datetime.now().isoformat(),
                         "updated_at": datetime.now().isoformat()
                     }
@@ -102,7 +206,414 @@ class StrategyService:
         except Exception as e:
             logger.error(f"加载数据失败 {file_path}: {e}")
             return None
+
+    async def validate_strategy(self, strategy_type: str, parameters: Dict[str, Any]) -> StrategyValidation:
+        """验证策略参数"""
+        errors = []
+        warnings = []
+        risk_score = 0.0
+        complexity_score = 0.0
+        
+        try:
+            # 基础参数验证
+            if not parameters:
+                errors.append("策略参数不能为空")
+                return StrategyValidation(False, errors, warnings, 1.0, 0.0)
+            
+            # 根据策略类型进行特定验证
+            if strategy_type == StrategyType.MA_CROSS.value:
+                validation_result = self._validate_ma_cross(parameters)
+            elif strategy_type == StrategyType.KDJ_MACD.value:
+                validation_result = self._validate_kdj_macd(parameters)
+            elif strategy_type == StrategyType.RSI_STRATEGY.value:
+                validation_result = self._validate_rsi_strategy(parameters)
+            elif strategy_type == StrategyType.BOLLINGER_BANDS.value:
+                validation_result = self._validate_bollinger_bands(parameters)
+            elif strategy_type == StrategyType.VOLUME_BREAKOUT.value:
+                validation_result = self._validate_volume_breakout(parameters)
+            else:
+                errors.append(f"不支持的策略类型: {strategy_type}")
+                return StrategyValidation(False, errors, warnings, 1.0, 0.0)
+            
+            errors.extend(validation_result.get("errors", []))
+            warnings.extend(validation_result.get("warnings", []))
+            risk_score = validation_result.get("risk_score", 0.5)
+            complexity_score = validation_result.get("complexity_score", 0.5)
+            
+            # 通用参数验证
+            if "stop_loss" in parameters:
+                if parameters["stop_loss"] <= 0 or parameters["stop_loss"] > 0.5:
+                    errors.append("止损比例应在0-50%之间")
+            
+            if "take_profit" in parameters:
+                if parameters["take_profit"] <= 0 or parameters["take_profit"] > 1.0:
+                    errors.append("止盈比例应在0-100%之间")
+            
+            if "position_size" in parameters:
+                if parameters["position_size"] <= 0 or parameters["position_size"] > 1.0:
+                    errors.append("仓位大小应在0-100%之间")
+            
+            is_valid = len(errors) == 0
+            
+            return StrategyValidation(is_valid, errors, warnings, risk_score, complexity_score)
+            
+        except Exception as e:
+            logger.error(f"策略验证失败: {e}")
+            errors.append(f"策略验证异常: {e}")
+            return StrategyValidation(False, errors, warnings, 1.0, 0.0)
     
+    def _validate_ma_cross(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """验证MA交叉策略参数"""
+        errors = []
+        warnings = []
+        risk_score = 0.3
+        complexity_score = 0.2
+        
+        if "short_period" not in parameters or "long_period" not in parameters:
+            errors.append("MA交叉策略需要短期和长期周期参数")
+        else:
+            short_period = parameters["short_period"]
+            long_period = parameters["long_period"]
+            
+            if short_period >= long_period:
+                errors.append("短期周期必须小于长期周期")
+            
+            if short_period < 2 or long_period > 200:
+                warnings.append("周期参数可能过大或过小")
+            
+            if long_period - short_period < 5:
+                warnings.append("长短周期差异过小，可能产生过多信号")
+        
+        return {"errors": errors, "warnings": warnings, "risk_score": risk_score, "complexity_score": complexity_score}
+    
+    def _validate_kdj_macd(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """验证KDJ+MACD策略参数"""
+        errors = []
+        warnings = []
+        risk_score = 0.7
+        complexity_score = 0.6
+        
+        required_params = ["kdj_period", "macd_fast", "macd_slow", "macd_signal"]
+        for param in required_params:
+            if param not in parameters:
+                errors.append(f"KDJ+MACD策略需要{param}参数")
+        
+        if "kdj_period" in parameters and parameters["kdj_period"] < 5:
+            warnings.append("KDJ周期过小可能产生噪声信号")
+        
+        return {"errors": errors, "warnings": warnings, "risk_score": risk_score, "complexity_score": complexity_score}
+    
+    def _validate_rsi_strategy(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """验证RSI策略参数"""
+        errors = []
+        warnings = []
+        risk_score = 0.4
+        complexity_score = 0.3
+        
+        if "rsi_period" not in parameters:
+            errors.append("RSI策略需要周期参数")
+        elif parameters["rsi_period"] < 5 or parameters["rsi_period"] > 50:
+            warnings.append("RSI周期应在5-50之间")
+        
+        if "oversold" in parameters and "overbought" in parameters:
+            oversold = parameters["oversold"]
+            overbought = parameters["overbought"]
+            if oversold >= overbought:
+                errors.append("超卖值必须小于超买值")
+            if oversold < 10 or overbought > 90:
+                warnings.append("超买超卖值应在10-90之间")
+        
+        return {"errors": errors, "warnings": warnings, "risk_score": risk_score, "complexity_score": complexity_score}
+    
+    def _validate_bollinger_bands(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """验证布林带策略参数"""
+        errors = []
+        warnings = []
+        risk_score = 0.5
+        complexity_score = 0.4
+        
+        if "period" not in parameters:
+            errors.append("布林带策略需要周期参数")
+        elif parameters["period"] < 10 or parameters["period"] > 100:
+            warnings.append("布林带周期应在10-100之间")
+        
+        if "std_dev" in parameters:
+            if parameters["std_dev"] < 1.0 or parameters["std_dev"] > 3.0:
+                warnings.append("标准差倍数应在1.0-3.0之间")
+        
+        return {"errors": errors, "warnings": warnings, "risk_score": risk_score, "complexity_score": complexity_score}
+    
+    def _validate_volume_breakout(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """验证放量突破策略参数"""
+        errors = []
+        warnings = []
+        risk_score = 0.8
+        complexity_score = 0.5
+        
+        if "volume_multiplier" not in parameters:
+            errors.append("放量突破策略需要成交量倍数参数")
+        elif parameters["volume_multiplier"] < 1.5:
+            warnings.append("成交量倍数过小可能产生假信号")
+        
+        if "price_threshold" in parameters:
+            if parameters["price_threshold"] < 0.01 or parameters["price_threshold"] > 0.10:
+                warnings.append("价格阈值应在1%-10%之间")
+        
+        return {"errors": errors, "warnings": warnings, "risk_score": risk_score, "complexity_score": complexity_score}
+
+    async def optimize_strategy(self, strategy_id: int, optimization_params: Dict[str, Any]) -> Dict[str, Any]:
+        """优化策略参数"""
+        try:
+            strategy = await self.get_strategy(strategy_id)
+            if not strategy:
+                return {"error": "策略不存在"}
+            
+            # 获取优化范围
+            param_ranges = optimization_params.get("param_ranges", {})
+            optimization_target = optimization_params.get("target", "sharpe_ratio")
+            iterations = optimization_params.get("iterations", 100)
+            
+            best_params = strategy["parameters"].copy()
+            best_performance = 0.0
+            
+            # 网格搜索优化
+            for i in range(iterations):
+                # 生成随机参数组合
+                test_params = self._generate_test_params(strategy["parameters"], param_ranges)
+                
+                # 运行回测
+                backtest_result = await self._simulate_backtest(
+                    {**strategy, "parameters": test_params},
+                    "000001.XSHE",  # 测试股票
+                    "2024-01-01",
+                    "2024-12-31",
+                    100000.0
+                )
+                
+                if "error" not in backtest_result:
+                    performance = backtest_result.get(optimization_target, 0.0)
+                    if performance > best_performance:
+                        best_performance = performance
+                        best_params = test_params.copy()
+            
+            # 更新策略参数
+            await self.update_strategy(strategy_id, {"parameters": best_params})
+            
+            return {
+                "message": "策略优化完成",
+                "original_params": strategy["parameters"],
+                "optimized_params": best_params,
+                "performance_improvement": best_performance,
+                "optimization_target": optimization_target
+            }
+            
+        except Exception as e:
+            logger.error(f"策略优化失败: {e}")
+            return {"error": f"策略优化失败: {e}"}
+    
+    def _generate_test_params(self, base_params: Dict[str, Any], param_ranges: Dict[str, Any]) -> Dict[str, Any]:
+        """生成测试参数"""
+        test_params = base_params.copy()
+        
+        for param, range_info in param_ranges.items():
+            if param in test_params:
+                if isinstance(range_info, dict):
+                    min_val = range_info.get("min", test_params[param] * 0.5)
+                    max_val = range_info.get("max", test_params[param] * 1.5)
+                    step = range_info.get("step", (max_val - min_val) / 10)
+                    
+                    # 随机选择参数值
+                    import random
+                    test_params[param] = round(random.uniform(min_val, max_val) / step) * step
+                elif isinstance(range_info, list):
+                    import random
+                    test_params[param] = random.choice(range_info)
+        
+        return test_params
+
+    async def create_strategy_combination(self, name: str, strategy_ids: List[int], 
+                                        allocation: List[float]) -> Dict[str, Any]:
+        """创建策略组合"""
+        try:
+            logger.info(f"创建策略组合: name={name}, strategy_ids={strategy_ids}, allocation={allocation}")
+            
+            if len(strategy_ids) != len(allocation):
+                return {"error": "策略ID和分配比例数量不匹配"}
+            
+            if abs(sum(allocation) - 1.0) > 0.01:
+                return {"error": f"分配比例总和必须为100%，当前总和: {sum(allocation)}"}
+            
+            # 验证策略是否存在
+            strategies = []
+            for strategy_id in strategy_ids:
+                strategy = await self.get_strategy(strategy_id)
+                if not strategy:
+                    return {"error": f"策略ID {strategy_id} 不存在"}
+                strategies.append(strategy)
+            
+            # 加载现有组合
+            combinations_data = self._load_data(self.strategy_combinations_file) or {"combinations": []}
+            combinations = combinations_data["combinations"]
+            
+            # 生成新ID
+            new_id = max([c["id"] for c in combinations], default=0) + 1
+            
+            new_combination = {
+                "id": new_id,
+                "name": name,
+                "strategies": strategy_ids,
+                "allocation": allocation,
+                "status": "active",
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
+            }
+            
+            combinations.append(new_combination)
+            self._save_data(self.strategy_combinations_file, combinations_data)
+            
+            logger.info(f"策略组合创建成功: {name}")
+            return {
+                "message": "策略组合创建成功",
+                "combination_id": new_id,
+                "combination": new_combination
+            }
+            
+        except Exception as e:
+            logger.error(f"创建策略组合失败: {e}")
+            return {"error": f"创建策略组合失败: {e}"}
+    
+    async def get_strategy_combinations(self) -> List[Dict[str, Any]]:
+        """获取策略组合列表"""
+        try:
+            combinations_data = self._load_data(self.strategy_combinations_file)
+            if combinations_data and "combinations" in combinations_data:
+                return combinations_data["combinations"]
+            return []
+        except Exception as e:
+            logger.error(f"获取策略组合失败: {e}")
+            return []
+    
+    async def run_combination_backtest(self, combination_id: int, 
+                                     stock_codes: List[str],
+                                     start_date: str,
+                                     end_date: str,
+                                     initial_capital: float = 100000.0) -> Dict[str, Any]:
+        """运行策略组合回测"""
+        try:
+            combinations = await self.get_strategy_combinations()
+            combination = next((c for c in combinations if c["id"] == combination_id), None)
+            
+            if not combination:
+                return {"error": "策略组合不存在"}
+            
+            # 运行各策略回测
+            individual_results = []
+            total_return = 0.0
+            total_risk = 0.0
+            
+            for i, strategy_id in enumerate(combination["strategies"]):
+                allocation = combination["allocation"][i]
+                strategy_capital = initial_capital * allocation
+                
+                strategy = await self.get_strategy(strategy_id)
+                if strategy:
+                    result = await self._simulate_backtest(
+                        strategy, stock_codes[i % len(stock_codes)], start_date, end_date, strategy_capital
+                    )
+                    
+                    if "error" not in result:
+                        weighted_return = result["total_return"] * allocation
+                        weighted_risk = result["max_drawdown"] * allocation
+                        
+                        total_return += weighted_return
+                        total_risk += weighted_risk
+                        
+                        individual_results.append({
+                            "strategy_id": strategy_id,
+                            "strategy_name": strategy["name"],
+                            "allocation": allocation,
+                            "result": result,
+                            "weighted_return": weighted_return,
+                            "weighted_risk": weighted_risk
+                        })
+            
+            # 计算组合整体表现
+            combination_result = {
+                "total_return": total_return,
+                "annualized_return": total_return * 252 / 365,
+                "max_drawdown": total_risk,
+                "sharpe_ratio": total_return / (total_risk + 0.01),  # 避免除零
+                "individual_results": individual_results,
+                "start_date": start_date,
+                "end_date": end_date,
+                "backtest_date": datetime.now().isoformat()
+            }
+            
+            return {
+                "message": "组合回测完成",
+                "combination_id": combination_id,
+                "results": combination_result
+            }
+            
+        except Exception as e:
+            logger.error(f"组合回测失败: {e}")
+            return {"error": f"组合回测失败: {e}"}
+
+    async def get_strategy_performance(self, strategy_id: int) -> Optional[StrategyPerformance]:
+        """获取策略性能指标"""
+        try:
+            # 获取回测结果
+            backtest_results = await self.get_backtest_results(strategy_id)
+            if not backtest_results:
+                return None
+            
+            # 计算综合性能指标
+            total_return = 0.0
+            max_drawdown = 0.0
+            trade_count = 0
+            win_count = 0
+            
+            for result in backtest_results:
+                if "result" in result:
+                    result_data = result["result"]
+                    total_return += result_data.get("total_return", 0.0)
+                    max_drawdown = max(max_drawdown, result_data.get("max_drawdown", 0.0))
+                    trade_count += result_data.get("trade_count", 0)
+                    if result_data.get("total_return", 0.0) > 0:
+                        win_count += 1
+            
+            if not backtest_results:
+                return None
+            
+            avg_return = total_return / len(backtest_results)
+            win_rate = win_count / len(backtest_results) if backtest_results else 0.0
+            
+            # 计算其他指标
+            sharpe_ratio = avg_return / (max_drawdown + 0.01)
+            sortino_ratio = avg_return / (max_drawdown + 0.01)  # 简化计算
+            calmar_ratio = avg_return / (max_drawdown + 0.01)  # 简化计算
+            
+            return StrategyPerformance(
+                total_return=avg_return,
+                annualized_return=avg_return * 252 / 365,
+                max_drawdown=max_drawdown,
+                sharpe_ratio=sharpe_ratio,
+                sortino_ratio=sortino_ratio,
+                calmar_ratio=calmar_ratio,
+                win_rate=win_rate,
+                profit_factor=win_rate / (1 - win_rate) if win_rate < 1 else 10.0,
+                trade_count=trade_count,
+                avg_trade_return=avg_return / max(trade_count, 1),
+                max_consecutive_losses=0,  # 需要更复杂的计算
+                volatility=max_drawdown,  # 简化计算
+                beta=1.0,  # 需要市场数据计算
+                alpha=avg_return  # 简化计算
+            )
+            
+        except Exception as e:
+            logger.error(f"获取策略性能失败: {e}")
+            return None
+
     async def get_strategies(self) -> List[Dict[str, Any]]:
         """获取策略列表"""
         try:
@@ -133,6 +644,11 @@ class StrategyService:
                             parameters: Dict[str, Any]) -> Dict[str, Any]:
         """创建新策略"""
         try:
+            # 验证策略参数
+            validation = await self.validate_strategy(strategy_type, parameters)
+            if not validation.is_valid:
+                return {"error": f"策略验证失败: {'; '.join(validation.errors)}"}
+            
             strategies_data = self._load_data(self.strategies_file) or {"strategies": []}
             strategies = strategies_data["strategies"]
             
@@ -145,7 +661,10 @@ class StrategyService:
                 "type": strategy_type,
                 "description": description,
                 "parameters": parameters,
-                "is_active": False,  # 新策略默认不激活
+                "status": StrategyStatus.INACTIVE.value,  # 新策略默认不激活
+                "risk_level": "medium",
+                "expected_return": 0.15,
+                "max_drawdown": 0.20,
                 "created_at": datetime.now().isoformat(),
                 "updated_at": datetime.now().isoformat()
             }
@@ -157,7 +676,8 @@ class StrategyService:
             return {
                 "message": "策略创建成功",
                 "strategy_id": new_id,
-                "strategy": new_strategy
+                "strategy": new_strategy,
+                "validation": asdict(validation)
             }
             
         except Exception as e:

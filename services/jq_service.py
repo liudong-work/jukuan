@@ -651,3 +651,9 @@ class JQService:
 
 # 创建全局聚宽服务实例
 jq_service = JQService()
+
+def reinitialize_jq_service():
+    """重新初始化聚宽服务实例"""
+    global jq_service
+    jq_service = JQService()
+    return jq_service

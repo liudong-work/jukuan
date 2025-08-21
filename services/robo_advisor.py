@@ -318,22 +318,30 @@ class RoboAdvisor:
         """获取用户画像"""
         try:
             profiles_data = self._load_data(self.profiles_file)
+            if not profiles_data or "profiles" not in profiles_data:
+                logger.warning(f"用户画像数据文件不存在或格式错误: {self.profiles_file}")
+                return None
+                
             profile_data = next((p for p in profiles_data["profiles"] if p["user_id"] == user_id), None)
             
             if profile_data:
-                return UserProfile(
-                    user_id=profile_data["user_id"],
-                    age=profile_data["age"],
-                    income_level=profile_data["income_level"],
-                    investment_experience=profile_data["investment_experience"],
-                    risk_tolerance=RiskLevel(profile_data["risk_tolerance"]),
-                    investment_goal=InvestmentGoal(profile_data["investment_goal"]),
-                    investment_horizon=profile_data["investment_horizon"],
-                    liquidity_needs=profile_data["liquidity_needs"],
-                    tax_situation=profile_data["tax_situation"],
-                    created_at=datetime.fromisoformat(profile_data["created_at"]),
-                    updated_at=datetime.fromisoformat(profile_data["updated_at"])
-                )
+                try:
+                    return UserProfile(
+                        user_id=profile_data["user_id"],
+                        age=profile_data["age"],
+                        income_level=profile_data["income_level"],
+                        investment_experience=profile_data["investment_experience"],
+                        risk_tolerance=RiskLevel(profile_data["risk_tolerance"]),
+                        investment_goal=InvestmentGoal(profile_data["investment_goal"]),
+                        investment_horizon=profile_data["investment_horizon"],
+                        liquidity_needs=profile_data["liquidity_needs"],
+                        tax_situation=profile_data["tax_situation"],
+                        created_at=datetime.fromisoformat(profile_data["created_at"]),
+                        updated_at=datetime.fromisoformat(profile_data["updated_at"])
+                    )
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.error(f"用户画像数据格式错误: {e}")
+                    return None
             
             return None
             

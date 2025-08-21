@@ -11,6 +11,7 @@ import json
 import os
 from dataclasses import dataclass, asdict
 import uuid
+import numpy as np # Added for RSI and Bollinger signals
 
 # 导入相关服务
 try:
@@ -217,19 +218,34 @@ class StrategyExecutor:
         try:
             strategy_id = strategy.get("id")
             strategy_name = strategy.get("name", "")
+            strategy_type = strategy.get("strategy_type", "")
             
-            # 这里应该调用具体的策略逻辑来生成信号
-            # 目前使用模拟信号
-            if strategy.get("strategy_type") == "ma_cross":
+            if not strategy_id:
+                logger.warning(f"策略ID缺失: {strategy_name}")
+                return
+            
+            # 根据策略类型生成信号
+            signals = []
+            
+            if strategy_type == "ma_cross":
                 signals = await self._generate_ma_cross_signals(strategy)
-            elif strategy.get("strategy_type") == "kdj_macd":
+            elif strategy_type == "kdj_macd":
                 signals = await self._generate_kdj_macd_signals(strategy)
+            elif strategy_type == "rsi":
+                signals = await self._generate_rsi_signals(strategy)
+            elif strategy_type == "bollinger":
+                signals = await self._generate_bollinger_signals(strategy)
+            elif strategy_type == "volume":
+                signals = await self._generate_volume_signals(strategy)
             else:
-                signals = []
+                # 默认策略信号生成
+                signals = await self._generate_default_signals(strategy)
             
             # 将信号加入队列
             for signal in signals:
-                await self.signal_queue.put(signal)
+                if signal and signal.action in ["buy", "sell"]:
+                    await self.signal_queue.put(signal)
+                    logger.info(f"策略信号已加入队列: {strategy_name} -> {signal.action} {signal.stock_code}")
                 
         except Exception as e:
             logger.error(f"生成策略信号失败: {e}")
@@ -292,6 +308,160 @@ class StrategyExecutor:
             
         except Exception as e:
             logger.error(f"生成KDJ+MACD信号失败: {e}")
+            return []
+    
+    async def _generate_rsi_signals(self, strategy: Dict[str, Any]) -> List[StrategySignal]:
+        """生成RSI策略信号"""
+        try:
+            signals = []
+            
+            # 模拟RSI信号生成
+            if datetime.now().minute % 15 == 0:  # 每15分钟检查一次
+                # 这里应该实现真实的RSI计算逻辑
+                rsi_value = 50 + np.random.normal(0, 20)  # 模拟RSI值
+                
+                if rsi_value < 30:  # 超卖
+                    signal = StrategySignal(
+                        signal_id=f"signal_{uuid.uuid4().hex[:8]}",
+                        strategy_id=strategy.get("id"),
+                        strategy_name=strategy.get("name", ""),
+                        stock_code="000001.XSHE",
+                        stock_name="平安银行",
+                        action="buy",
+                        quantity=1000,
+                        price=None,
+                        confidence=0.8,
+                        timestamp=datetime.now(),
+                        metadata={"strategy_type": "rsi", "rsi_value": rsi_value}
+                    )
+                    signals.append(signal)
+                elif rsi_value > 70:  # 超买
+                    signal = StrategySignal(
+                        signal_id=f"signal_{uuid.uuid4().hex[:8]}",
+                        strategy_id=strategy.get("id"),
+                        strategy_name=strategy.get("name", ""),
+                        stock_code="000001.XSHE",
+                        stock_name="平安银行",
+                        action="sell",
+                        quantity=1000,
+                        price=None,
+                        confidence=0.8,
+                        timestamp=datetime.now(),
+                        metadata={"strategy_type": "rsi", "rsi_value": rsi_value}
+                    )
+                    signals.append(signal)
+            
+            return signals
+            
+        except Exception as e:
+            logger.error(f"生成RSI信号失败: {e}")
+            return []
+    
+    async def _generate_bollinger_signals(self, strategy: Dict[str, Any]) -> List[StrategySignal]:
+        """生成布林带策略信号"""
+        try:
+            signals = []
+            
+            # 模拟布林带信号生成
+            if datetime.now().minute % 20 == 0:  # 每20分钟检查一次
+                # 这里应该实现真实的布林带计算逻辑
+                bb_position = np.random.uniform(0, 1)  # 模拟布林带位置
+                
+                if bb_position < 0.1:  # 接近下轨
+                    signal = StrategySignal(
+                        signal_id=f"signal_{uuid.uuid4().hex[:8]}",
+                        strategy_id=strategy.get("id"),
+                        strategy_name=strategy.get("name", ""),
+                        stock_code="000002.XSHE",
+                        stock_name="万科A",
+                        action="buy",
+                        quantity=800,
+                        price=None,
+                        confidence=0.75,
+                        timestamp=datetime.now(),
+                        metadata={"strategy_type": "bollinger", "bb_position": bb_position}
+                    )
+                    signals.append(signal)
+                elif bb_position > 0.9:  # 接近上轨
+                    signal = StrategySignal(
+                        signal_id=f"signal_{uuid.uuid4().hex[:8]}",
+                        strategy_id=strategy.get("id"),
+                        strategy_name=strategy.get("name", ""),
+                        stock_code="000002.XSHE",
+                        stock_name="万科A",
+                        action="sell",
+                        quantity=800,
+                        price=None,
+                        confidence=0.75,
+                        timestamp=datetime.now(),
+                        metadata={"strategy_type": "bollinger", "bb_position": bb_position}
+                    )
+                    signals.append(signal)
+            
+            return signals
+            
+        except Exception as e:
+            logger.error(f"生成布林带信号失败: {e}")
+            return []
+    
+    async def _generate_volume_signals(self, strategy: Dict[str, Any]) -> List[StrategySignal]:
+        """生成成交量策略信号"""
+        try:
+            signals = []
+            
+            # 模拟成交量信号生成
+            if datetime.now().minute % 25 == 0:  # 每25分钟检查一次
+                # 这里应该实现真实的成交量分析逻辑
+                volume_ratio = np.random.uniform(0.5, 2.0)  # 模拟成交量比率
+                
+                if volume_ratio > 1.5:  # 放量
+                    signal = StrategySignal(
+                        signal_id=f"signal_{uuid.uuid4().hex[:8]}",
+                        strategy_id=strategy.get("id"),
+                        strategy_name=strategy.get("name", ""),
+                        stock_code="000858.XSHE",
+                        stock_name="五粮液",
+                        action="buy",
+                        quantity=600,
+                        price=None,
+                        confidence=0.7,
+                        timestamp=datetime.now(),
+                        metadata={"strategy_type": "volume", "volume_ratio": volume_ratio}
+                    )
+                    signals.append(signal)
+            
+            return signals
+            
+        except Exception as e:
+            logger.error(f"生成成交量信号失败: {e}")
+            return []
+    
+    async def _generate_default_signals(self, strategy: Dict[str, Any]) -> List[StrategySignal]:
+        """生成默认策略信号"""
+        try:
+            signals = []
+            
+            # 默认信号生成逻辑
+            if datetime.now().hour in [9, 10, 14, 15] and datetime.now().minute % 30 == 0:
+                signal = StrategySignal(
+                    signal_id=f"signal_{uuid.uuid4().hex[:8]}",
+                    strategy_id=strategy.get("id"),
+                    strategy_name=strategy.get("name", ""),
+                    stock_code="000001.XSHE",
+                    stock_name="平安银行",
+                    action="hold",
+                    quantity=0,
+                    price=None,
+                    confidence=0.5,
+                    timestamp=datetime.now(),
+                    metadata={"strategy_type": "default", "note": "默认策略，建议观望"}
+                )
+                signals.append(signal)
+            
+            return signals
+            
+        except Exception as e:
+            logger.error(f"生成默认策略信号失败: {e}")
             return []
     
     async def _update_risk_metrics(self):

@@ -562,5 +562,231 @@ class MLStrategyService:
             logger.error(f"删除策略失败: {e}")
             return {"error": f"删除策略失败: {e}"}
 
+    async def get_model_performance(self, strategy_id: str) -> Optional[ModelPerformance]:
+        """获取模型性能"""
+        try:
+            strategies_data = self._load_data(self.strategies_file)
+            strategy = next((s for s in strategies_data["strategies"] if s["strategy_id"] == strategy_id), None)
+            
+            if not strategy:
+                return None
+            
+            # 获取最新的性能指标
+            performance = strategy.get("performance_metrics", {})
+            
+            return ModelPerformance(
+                model_id=strategy_id,
+                accuracy=performance.get("accuracy", 0.0),
+                precision=performance.get("precision", 0.0),
+                recall=performance.get("recall", 0.0),
+                f1_score=performance.get("f1_score", 0.0),
+                cross_val_score=performance.get("cross_val_score", 0.0),
+                backtest_return=0.0, # Placeholder, will be updated after backtest
+                backtest_sharpe=0.0, # Placeholder, will be updated after backtest
+                backtest_max_drawdown=0.0, # Placeholder, will be updated after backtest
+                timestamp=datetime.fromisoformat(strategy.get("updated_at", datetime.now().isoformat()))
+            )
+            
+        except Exception as e:
+            logger.error(f"获取模型性能失败: {e}")
+            return None
+    
+    async def update_model(self, strategy_id: str, new_training_data: pd.DataFrame) -> Dict[str, Any]:
+        """更新模型（增量训练）"""
+        try:
+            strategy = await self.get_strategy(strategy_id)
+            if not strategy:
+                return {"error": "策略不存在"}
+            
+            # 加载现有模型
+            model_file = strategy.get("model_file", "")
+            scaler_file = strategy.get("scaler_file", "")
+            
+            if not model_file or not os.path.exists(model_file):
+                return {"error": "模型文件不存在"}
+            
+            # 加载模型和标准化器
+            model = joblib.load(model_file)
+            scaler = joblib.load(scaler_file)
+            
+            # 准备新数据
+            features = strategy.get("features", [])
+            target_column = strategy.get("target_column", "target")
+            
+            if not all(f in new_training_data.columns for f in features):
+                return {"error": "新数据缺少必要的特征"}
+            
+            X_new = new_training_data[features].fillna(0)
+            y_new = new_training_data[target_column].fillna(0)
+            
+            # 增量训练
+            X_new_scaled = scaler.transform(X_new)
+            model.partial_fit(X_new_scaled, y_new)
+            
+            # 评估新性能
+            y_pred = model.predict(X_new_scaled)
+            new_accuracy = accuracy_score(y_new, y_pred)
+            
+            # 更新性能指标
+            current_performance = strategy.get("performance_metrics", {})
+            current_performance["accuracy"] = (current_performance.get("accuracy", 0.0) + new_accuracy) / 2
+            current_performance["last_updated"] = datetime.now().isoformat()
+            
+            # 保存更新后的模型
+            joblib.dump(model, model_file)
+            joblib.dump(scaler, scaler_file)
+            
+            # 更新策略记录
+            await self.update_strategy(strategy_id, {
+                "performance_metrics": current_performance,
+                "updated_at": datetime.now().isoformat()
+            })
+            
+            return {
+                "message": "模型更新成功",
+                "new_accuracy": new_accuracy,
+                "updated_performance": current_performance
+            }
+            
+        except Exception as e:
+            logger.error(f"更新模型失败: {e}")
+            return {"error": f"更新模型失败: {e}"}
+    
+    async def validate_model(self, strategy_id: str, validation_data: pd.DataFrame) -> Dict[str, Any]:
+        """验证模型性能"""
+        try:
+            strategy = await self.get_strategy(strategy_id)
+            if not strategy:
+                return {"error": "策略不存在"}
+            
+            # 加载模型
+            model_file = strategy.get("model_file", "")
+            scaler_file = strategy.get("scaler_file", "")
+            
+            if not model_file or not os.path.exists(model_file):
+                return {"error": "模型文件不存在"}
+            
+            model = joblib.load(model_file)
+            scaler = joblib.load(scaler_file)
+            
+            # 准备验证数据
+            features = strategy.get("features", [])
+            target_column = strategy.get("target_column", "target")
+            
+            if not all(f in validation_data.columns for f in features):
+                return {"error": "验证数据缺少必要的特征"}
+            
+            X_val = validation_data[features].fillna(0)
+            y_val = validation_data[target_column].fillna(0)
+            
+            # 预测和评估
+            X_val_scaled = scaler.transform(X_val)
+            y_pred = model.predict(X_val_scaled)
+            
+            # 计算性能指标
+            accuracy = accuracy_score(y_val, y_pred)
+            precision = precision_score(y_val, y_pred, average='weighted', zero_division=0)
+            recall = recall_score(y_val, y_pred, average='weighted', zero_division=0)
+            f1 = f1_score(y_val, y_pred, average='weighted', zero_division=0)
+            
+            # 计算混淆矩阵
+            from sklearn.metrics import confusion_matrix
+            cm = confusion_matrix(y_val, y_pred)
+            
+            validation_result = {
+                "strategy_id": strategy_id,
+                "validation_samples": len(validation_data),
+                "accuracy": accuracy,
+                "precision": precision,
+                "recall": recall,
+                "f1_score": f1,
+                "confusion_matrix": cm.tolist(),
+                "validation_date": datetime.now().isoformat()
+            }
+            
+            # 保存验证结果
+            self._save_validation_result(strategy_id, validation_result)
+            
+            return validation_result
+            
+        except Exception as e:
+            logger.error(f"验证模型失败: {e}")
+            return {"error": f"验证模型失败: {e}"}
+    
+    def _save_validation_result(self, strategy_id: str, validation_result: Dict[str, Any]):
+        """保存验证结果"""
+        try:
+            validation_file = f"data/ml_validation_results.json"
+            if not os.path.exists(validation_file):
+                validation_data = {"results": []}
+            else:
+                with open(validation_file, 'r', encoding='utf-8') as f:
+                    validation_data = json.load(f)
+            
+            # 添加新的验证结果
+            validation_data["results"].append(validation_result)
+            
+            # 保存到文件
+            with open(validation_file, 'w', encoding='utf-8') as f:
+                json.dump(validation_data, f, ensure_ascii=False, indent=2, default=str)
+                
+        except Exception as e:
+            logger.error(f"保存验证结果失败: {e}")
+    
+    async def get_model_history(self, strategy_id: str) -> List[Dict[str, Any]]:
+        """获取模型训练历史"""
+        try:
+            strategy = await self.get_strategy(strategy_id)
+            if not strategy:
+                return []
+            
+            return strategy.get("training_history", [])
+            
+        except Exception as e:
+            logger.error(f"获取模型历史失败: {e}")
+            return []
+    
+    async def export_model(self, strategy_id: str, export_path: str) -> Dict[str, Any]:
+        """导出模型"""
+        try:
+            strategy = await self.get_strategy(strategy_id)
+            if not strategy:
+                return {"error": "策略不存在"}
+            
+            model_file = strategy.get("model_file", "")
+            scaler_file = strategy.get("scaler_file", "")
+            
+            if not model_file or not os.path.exists(model_file):
+                return {"error": "模型文件不存在"}
+            
+            # 创建导出目录
+            os.makedirs(export_path, exist_ok=True)
+            
+            # 复制模型文件
+            import shutil
+            model_filename = os.path.basename(model_file)
+            scaler_filename = os.path.basename(scaler_file)
+            
+            exported_model = os.path.join(export_path, model_filename)
+            exported_scaler = os.path.join(export_path, scaler_filename)
+            
+            shutil.copy2(model_file, exported_model)
+            shutil.copy2(scaler_file, exported_scaler)
+            
+            # 导出策略配置
+            config_file = os.path.join(export_path, f"{strategy_id}_config.json")
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(strategy, f, ensure_ascii=False, indent=2, default=str)
+            
+            return {
+                "message": "模型导出成功",
+                "export_path": export_path,
+                "files": [exported_model, exported_scaler, config_file]
+            }
+            
+        except Exception as e:
+            logger.error(f"导出模型失败: {e}")
+            return {"error": f"导出模型失败: {e}"}
+
 # 创建全局机器学习策略服务实例
 ml_strategy_service = MLStrategyService()

@@ -64,12 +64,40 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-arrow-left me-2"></i>
-                返回主页
+                <i class="fas fa-chart-line me-2"></i>
+                量化交易系统 v2.0.0
             </a>
-            <span class="navbar-text">
-                策略管理 - 量化策略与回测
-            </span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">实时监控</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/jq-demo">聚宽数据</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stock-table">股票表格</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/trading">交易管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/strategy">策略管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analysis">分析</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/docs">API文档</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -98,6 +126,12 @@
                     </button>
                     <button class="btn btn-info btn-lg" onclick="refreshStrategies()">
                         <i class="fas fa-sync-alt me-2"></i>刷新策略
+                    </button>
+                    <button class="btn btn-warning btn-lg me-3" data-bs-toggle="modal" data-bs-target="#strategyCombinationModal">
+                        <i class="fas fa-layer-group me-2"></i>策略组合
+                    </button>
+                    <button class="btn btn-secondary btn-lg" onclick="showStrategyStatus()">
+                        <i class="fas fa-chart-pie me-2"></i>系统状态
                     </button>
                 </div>
             </div>
@@ -231,12 +265,51 @@
         </div>
     </div>
 
+    <!-- 策略组合模态框 -->
+    <div class="modal fade" id="strategyCombinationModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">策略组合管理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>创建新组合</h6>
+                            <form id="combinationForm">
+                                <div class="mb-3">
+                                    <label class="form-label">组合名称</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">选择策略</label>
+                                    <div id="strategySelection">
+                                        <!-- 动态策略选择 -->
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="createCombination()">创建组合</button>
+                            </form>
+                        </div>
+                        <div class="col-md-8">
+                            <h6>现有组合</h6>
+                            <div id="combinationsList">
+                                <!-- 组合列表 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadStrategies();
             loadBacktestResults();
+            loadCombinations();
             setupDateDefaults();
         });
 
@@ -398,15 +471,16 @@
             }
             
             try {
-                const params = new URLSearchParams({
-                    stock_code: stockCode,
-                    start_date: startDate,
-                    end_date: endDate,
-                    initial_capital: capital
-                });
+                // 使用FormData发送表单数据
+                const formData = new FormData();
+                formData.append('stock_code', stockCode);
+                formData.append('start_date', startDate);
+                formData.append('end_date', endDate);
+                formData.append('initial_capital', capital);
                 
-                const response = await fetch(`/api/v1/strategy/${strategyId}/backtest?${params.toString()}`, {
-                    method: 'POST'
+                const response = await fetch(`/api/v1/strategy/${strategyId}/backtest`, {
+                    method: 'POST',
+                    body: formData
                 });
                 
                 const data = await response.json();
@@ -429,7 +503,8 @@
         // 加载回测结果
         async function loadBacktestResults() {
             try {
-                const response = await fetch('/api/v1/strategy/backtest/results');
+                // 修复API端点路径
+                const response = await fetch('/api/v1/strategy/1/backtest-results');
                 const data = await response.json();
                 
                 if (response.ok) {
@@ -551,6 +626,189 @@
         // 刷新策略
         function refreshStrategies() {
             loadStrategies();
+        }
+
+        // 显示策略系统状态
+        async function showStrategyStatus() {
+            try {
+                const response = await fetch('/api/v1/strategy/status');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let statusHtml = `
+                        <div class="alert alert-info">
+                            <h6>策略系统状态</h6>
+                            <p><strong>总策略数:</strong> ${data.total_strategies}</p>
+                            <p><strong>总组合数:</strong> ${data.total_combinations}</p>
+                            <p><strong>服务状态:</strong> <span class="badge bg-success">${data.service_status}</span></p>
+                        </div>
+                    `;
+                    
+                    if (data.status_distribution) {
+                        statusHtml += '<h6>策略状态分布</h6><ul>';
+                        Object.entries(data.status_distribution).forEach(([status, count]) => {
+                            statusHtml += `<li>${status}: ${count}</li>`;
+                        });
+                        statusHtml += '</ul>';
+                    }
+                    
+                    if (data.type_distribution) {
+                        statusHtml += '<h6>策略类型分布</h6><ul>';
+                        Object.entries(data.type_distribution).forEach(([type, count]) => {
+                            statusHtml += `<li>${type}: ${count}</li>`;
+                        });
+                        statusHtml += '</ul>';
+                    }
+                    
+                    alert(statusHtml.replace(/<[^>]*>/g, ''));
+                } else {
+                    alert('获取系统状态失败');
+                }
+            } catch (error) {
+                console.error('获取系统状态失败:', error);
+                alert('获取系统状态失败');
+            }
+        }
+
+        // 创建策略组合
+        async function createCombination() {
+            const name = document.querySelector('#combinationForm input[name="name"]').value.trim();
+            const selectedStrategies = Array.from(document.querySelectorAll('#strategySelection input[type="checkbox"]:checked'))
+                .map(cb => parseInt(cb.value));
+            const allocations = Array.from(document.querySelectorAll('#strategySelection input[type="number"]'))
+                .map(input => parseFloat(input.value) / 100);
+            
+            if (!name || selectedStrategies.length === 0) {
+                alert('请填写组合名称并选择策略');
+                return;
+            }
+            
+            // 验证分配比例总和为100%
+            const totalAllocation = allocations.reduce((sum, alloc) => sum + alloc, 0);
+            if (Math.abs(totalAllocation - 1.0) > 0.01) {
+                alert('策略分配比例总和必须为100%');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('strategy_ids', JSON.stringify(selectedStrategies));
+                formData.append('allocation', JSON.stringify(allocations));
+                
+                const response = await fetch('/api/v1/strategy/combinations/create', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('策略组合创建成功！');
+                    document.getElementById('combinationForm').reset();
+                    loadCombinations();
+                } else {
+                    alert(`创建组合失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('创建组合失败:', error);
+                alert('创建组合失败，请检查网络连接');
+            }
+        }
+
+        // 加载策略组合
+        async function loadCombinations() {
+            try {
+                const response = await fetch('/api/v1/strategy/combinations/list');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayCombinations(data.combinations);
+                } else {
+                    console.error('获取组合列表失败:', data.detail);
+                }
+            } catch (error) {
+                console.error('加载组合失败:', error);
+            }
+        }
+
+        // 显示策略组合
+        function displayCombinations(combinations) {
+            const combinationsList = document.getElementById('combinationsList');
+            
+            if (combinations.length === 0) {
+                combinationsList.innerHTML = '<p class="text-muted">暂无策略组合</p>';
+                return;
+            }
+            
+            const combinationsHtml = combinations.map(combination => `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">${combination.name}</h6>
+                        <p class="card-text">
+                            <strong>策略数量:</strong> ${combination.strategies.length}<br>
+                            <strong>状态:</strong> <span class="badge bg-${combination.status === 'active' ? 'success' : 'secondary'}">${combination.status}</span>
+                        </p>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="runCombinationBacktest(${combination.id})">
+                                <i class="fas fa-chart-line"></i> 回测
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteCombination(${combination.id})">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            combinationsList.innerHTML = combinationsHtml;
+        }
+
+        // 运行组合回测
+        async function runCombinationBacktest(combinationId) {
+            const stockCodes = prompt('请输入股票代码列表（用逗号分隔）:').split(',').map(s => s.trim());
+            const startDate = prompt('请输入开始日期 (YYYY-MM-DD):');
+            const endDate = prompt('请输入结束日期 (YYYY-MM-DD):');
+            const capital = parseFloat(prompt('请输入初始资金:') || '100000');
+            
+            if (!stockCodes.length || !startDate || !endDate) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('stock_codes', JSON.stringify(stockCodes));
+                formData.append('start_date', startDate);
+                formData.append('end_date', endDate);
+                formData.append('initial_capital', capital);
+                
+                const response = await fetch(`/api/v1/strategy/combinations/${combinationId}/backtest`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('组合回测完成！');
+                    console.log('回测结果:', data);
+                } else {
+                    alert(`组合回测失败: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error('组合回测失败:', error);
+                alert('组合回测失败，请检查网络连接');
+            }
+        }
+
+        // 删除策略组合
+        async function deleteCombination(combinationId) {
+            if (!confirm('确定要删除这个策略组合吗？')) {
+                return;
+            }
+            
+            alert('删除组合功能开发中...');
         }
 
         // 工具函数
