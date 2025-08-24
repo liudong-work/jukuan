@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML策略引擎 - 量化交易系统 v2.0.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>
+                量化交易系统 v2.0.0
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ml-strategy">ML策略</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Left Navigation -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-brain me-2"></i>ML策略功能</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="#model-training" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                                <i class="fas fa-graduation-cap me-2"></i>模型训练
+                            </a>
+                            <a href="#prediction" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-crystal-ball me-2"></i>智能预测
+                            </a>
+                            <a href="#stock-screening" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="fas fa-filter me-2"></i>股票筛选
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content -->
+            <div class="col-md-9">
+                <div class="tab-content">
+                    <!-- 模型训练 -->
+                    <div class="tab-pane fade show active" id="model-training">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-graduation-cap me-2"></i>模型训练</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="trainingForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="strategyName" class="form-label">策略名称</label>
+                                                <select class="form-select" id="strategyName" required>
+                                                    <option value="ml_kdj_macd">ML增强KDJ+MACD策略</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="stockCode" class="form-label">股票代码</label>
+                                                <input type="text" class="form-control" id="stockCode" 
+                                                       value="000001" placeholder="000001" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="startDate" class="form-label">开始日期</label>
+                                                <input type="date" class="form-control" id="startDate" 
+                                                       value="2024-01-01" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="endDate" class="form-label">结束日期</label>
+                                                <input type="date" class="form-control" id="endDate" 
+                                                       value="2024-12-31" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-play me-1"></i>开始训练
+                                    </button>
+                                </form>
+                                
+                                <!-- 训练结果 -->
+                                <div id="trainingResult" class="mt-3" style="display: none;">
+                                    <!-- 训练结果将在这里显示 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 智能预测 -->
+                    <div class="tab-pane fade" id="prediction">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-crystal-ball me-2"></i>智能预测</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="predictionForm">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="predictionStrategy" class="form-label">策略名称</label>
+                                                <select class="form-select" id="predictionStrategy" required>
+                                                    <option value="">请先训练策略</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="predictionStock" class="form-label">股票代码</label>
+                                                <input type="text" class="form-control" id="predictionStock" 
+                                                       value="000001" placeholder="000001" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="predictionDate" class="form-label">预测日期</label>
+                                                <input type="date" class="form-control" id="predictionDate" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-magic me-1"></i>开始预测
+                                    </button>
+                                </form>
+                                
+                                <!-- 预测结果 -->
+                                <div id="predictionResult" class="mt-3" style="display: none;">
+                                    <!-- 预测结果将在这里显示 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 股票筛选 -->
+                    <div class="tab-pane fade" id="stock-screening">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-filter me-2"></i>股票筛选</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="screeningForm">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="screeningStrategy" class="form-label">策略名称</label>
+                                                <select class="form-select" id="screeningStrategy" required>
+                                                    <option value="">请先训练策略</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="screeningStocks" class="form-label">股票代码</label>
+                                                <input type="text" class="form-control" id="screeningStocks" 
+                                                       value="000001,000002,600036" 
+                                                       placeholder="000001,000002,600036" required>
+                                                <div class="form-text">多个代码用逗号分隔</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="screeningDate" class="form-label">筛选日期</label>
+                                                <input type="date" class="form-control" id="screeningDate" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-search me-1"></i>开始筛选
+                                    </button>
+                                </form>
+                                
+                                <!-- 筛选结果 -->
+                                <div id="screeningResult" class="mt-3" style="display: none;">
+                                    <!-- 筛选结果将在这里显示 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Custom Script -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setDefaultDates();
+            bindFormEvents();
+        });
+
+        // 设置默认日期
+        function setDefaultDates() {
+            const today = new Date();
+            const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            
+            document.getElementById('startDate').value = oneYearAgo.toISOString().slice(0, 10);
+            document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+            document.getElementById('predictionDate').value = today.toISOString().slice(0, 10);
+            document.getElementById('screeningDate').value = today.toISOString().slice(0, 10);
+        }
+
+        // 绑定表单事件
+        function bindFormEvents() {
+            // 训练表单
+            document.getElementById('trainingForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                trainModel();
+            });
+            
+            // 预测表单
+            document.getElementById('predictionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                makePrediction();
+            });
+            
+            // 筛选表单
+            document.getElementById('screeningForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                screenStocks();
+            });
+        }
+
+        // 训练模型
+        async function trainModel() {
+            try {
+                const formData = new FormData();
+                formData.append('strategy_name', document.getElementById('strategyName').value);
+                formData.append('stock_code', document.getElementById('stockCode').value);
+                formData.append('start_date', document.getElementById('startDate').value);
+                formData.append('end_date', document.getElementById('endDate').value);
+                
+                const response = await fetch('/api/v1/ml-strategy/train', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayTrainingResult(result.data);
+                } else {
+                    alert('训练失败: ' + result.message);
+                }
+                
+            } catch (error) {
+                console.error('训练模型失败:', error);
+                alert('训练失败，请检查网络连接');
+            }
+        }
+
+        // 显示训练结果
+        function displayTrainingResult(data) {
+            const container = document.getElementById('trainingResult');
+            container.style.display = 'block';
+            
+            container.innerHTML = `
+                <div class="alert alert-success">
+                    <h6>训练成功！</h6>
+                    <p><strong>策略名称:</strong> ${data.strategy_name}</p>
+                    <p><strong>股票代码:</strong> ${data.stock_code}</p>
+                    <p><strong>训练周期:</strong> ${data.training_period}</p>
+                    <p><strong>训练样本:</strong> ${data.training_samples}</p>
+                </div>
+            `;
+        }
+
+        // 进行预测
+        async function makePrediction() {
+            try {
+                const formData = new FormData();
+                formData.append('strategy_name', document.getElementById('predictionStrategy').value);
+                formData.append('stock_code', document.getElementById('predictionStock').value);
+                formData.append('prediction_date', document.getElementById('predictionDate').value);
+                
+                const response = await fetch('/api/v1/ml-strategy/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayPredictionResult(result.data);
+                } else {
+                    alert('预测失败: ' + result.message);
+                }
+                
+            } catch (error) {
+                console.error('预测失败:', error);
+                alert('预测失败，请检查网络连接');
+            }
+        }
+
+        // 显示预测结果
+        function displayPredictionResult(data) {
+            const container = document.getElementById('predictionResult');
+            container.style.display = 'block';
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h6>预测结果 - ${data.stock_code}</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>ML预测:</strong> ${data.prediction.ml_prediction || 'N/A'}</p>
+                        <p><strong>置信度:</strong> ${data.prediction.ml_confidence ? (data.prediction.ml_confidence * 100).toFixed(1) + '%' : 'N/A'}</p>
+                        <p><strong>交易信号:</strong> ${data.signals.signal}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 股票筛选
+        async function screenStocks() {
+            try {
+                const formData = new FormData();
+                formData.append('strategy_name', document.getElementById('screeningStrategy').value);
+                formData.append('stock_codes', document.getElementById('screeningStocks').value);
+                formData.append('screening_date', document.getElementById('screeningDate').value);
+                
+                const response = await fetch('/api/v1/ml-strategy/screen', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayScreeningResult(result.data);
+                } else {
+                    alert('筛选失败: ' + result.message);
+                }
+                
+            } catch (error) {
+                console.error('股票筛选失败:', error);
+                alert('筛选失败，请检查网络连接');
+            }
+        }
+
+        // 显示筛选结果
+        function displayScreeningResult(data) {
+            const container = document.getElementById('screeningResult');
+            container.style.display = 'block';
+            
+            const result = data.screening_result;
+            
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h6>筛选结果</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>筛选股票总数:</strong> ${result.total_screened}</p>
+                        <p><strong>符合条件股票:</strong> ${result.total_selected}</p>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

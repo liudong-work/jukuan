@@ -155,6 +155,16 @@ async def analysis_page(request: Request):
     """分析页面"""
     return templates.TemplateResponse("analysis.html", {"request": request})
 
+@app.get("/realtime-data", response_class=HTMLResponse)
+async def realtime_data_page(request: Request):
+    """实时数据页面"""
+    return templates.TemplateResponse("realtime_data.html", {"request": request})
+
+@app.get("/ml-strategy", response_class=HTMLResponse)
+async def ml_strategy_page(request: Request):
+    """ML策略页面"""
+    return templates.TemplateResponse("ml_strategy.html", {"request": request})
+
 @app.get("/auto-trading", response_class=HTMLResponse)
 async def auto_trading_page(request: Request):
     """自动交易页面"""
