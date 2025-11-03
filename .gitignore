@@ -63,3 +63,8 @@ test_*.py
 # Temporary files
 *.tmp
 *.temp
+
+# Cache and data files
+cache/jq_data/daily_data_*.json
+.env.backup
+.env.*.backup
