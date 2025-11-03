@@ -165,6 +165,11 @@ async def ml_strategy_page(request: Request):
     """ML策略页面"""
     return templates.TemplateResponse("ml_strategy.html", {"request": request})
 
+@app.get("/realtime-monitor", response_class=HTMLResponse)
+async def realtime_monitor_page(request: Request):
+    """实时监控页面"""
+    return templates.TemplateResponse("realtime_monitor.html", {"request": request})
+
 @app.get("/auto-trading", response_class=HTMLResponse)
 async def auto_trading_page(request: Request):
     """自动交易页面"""

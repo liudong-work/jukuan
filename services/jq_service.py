@@ -12,7 +12,16 @@ import json
 import os
 import numpy as np
 
-from src.data.jq_data_provider import JQDataProvider
+try:
+    from src.data.jq_data_provider import JQDataProvider
+except ImportError:
+    JQDataProvider = None
+
+try:
+    from src.data.mock_jq_provider import MockJQDataProvider
+except ImportError:
+    MockJQDataProvider = None
+
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -65,7 +74,8 @@ class JQService:
     def _init_data_provider(self):
         """初始化数据提供者"""
         try:
-            if settings.JQ_USERNAME and settings.JQ_PASSWORD:
+            # 优先尝试使用真实的聚宽数据提供者
+            if JQDataProvider and settings.JQ_USERNAME and settings.JQ_PASSWORD and settings.JQ_USERNAME != "your_username":
                 print(f"🔍 初始化聚宽服务: 用户名={settings.JQ_USERNAME}")
                 self.data_provider = JQDataProvider(
                     username=settings.JQ_USERNAME,
@@ -74,9 +84,32 @@ class JQService:
                 self.is_connected = self.data_provider.is_connected
                 self.connection_status = "connected" if self.is_connected else "failed"
                 logger.info(f"聚宽数据提供者初始化: {self.connection_status}")
+                
+                # 如果真实连接失败，切换到模拟模式
+                if not self.is_connected:
+                    print("🔄 真实聚宽连接失败，切换到模拟模式")
+                    self.data_provider = MockJQDataProvider(
+                        username=settings.JQ_USERNAME or "mock_user",
+                        password=settings.JQ_PASSWORD or "mock_pass"
+                    )
+                    self.is_connected = True
+                    self.connection_status = "mock_connected"
+                    logger.info("已切换到聚宽模拟数据提供者")
+            # 如果真实提供者不可用或未配置，使用模拟提供者
+            elif MockJQDataProvider:
+                print("🔍 使用聚宽模拟服务")
+                self.data_provider = MockJQDataProvider(
+                    username=settings.JQ_USERNAME or "mock_user",
+                    password=settings.JQ_PASSWORD or "mock_pass"
+                )
+                # 确保模拟服务连接
+                self.data_provider.connect()
+                self.is_connected = True  # 模拟服务总是连接成功
+                self.connection_status = "mock_connected"
+                logger.info("聚宽模拟数据提供者初始化成功")
             else:
-                logger.warning("聚宽用户名或密码未配置")
-                self.connection_status = "not_configured"
+                logger.warning("聚宽数据提供者不可用")
+                self.connection_status = "not_available"
         except Exception as e:
             logger.error(f"初始化聚宽数据提供者失败: {e}")
             self.connection_status = "error"
@@ -170,7 +203,10 @@ class JQService:
         """获取股票列表（增强版，包含价格和涨幅）"""
         try:
             if not self.is_connected:
-                await self.connect()
+                success = await self.connect()
+                if not success:
+                    logger.warning("聚宽连接失败，返回空列表")
+                    return []
             
             # 尝试从缓存加载
             cache_key = f"stock_list_{market}"
@@ -200,8 +236,9 @@ class JQService:
                     for i in range(0, len(stocks), 5):  # 每次处理5只股票
                         batch_stocks = stocks[i:i+5]
                         
-                        for stock_code in batch_stocks:
+                        for stock in batch_stocks:
                             try:
+                                stock_code = stock['code'] if isinstance(stock, dict) else stock
                                 data = self.data_provider.get_daily_data(stock_code, start_date, end_date)
                                 
                                 if not data.empty:

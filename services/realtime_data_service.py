@@ -156,8 +156,15 @@ class DataQualityMonitor:
     
     def get_quality_report(self) -> Dict[str, Any]:
         """获取数据质量报告"""
+        scores = [m['overall_score'] for m in self.quality_metrics.values()]
+        overall_quality = np.mean(scores) if scores else 0.0
+        
+        # 确保没有 NaN 值
+        if np.isnan(overall_quality):
+            overall_quality = 0.0
+        
         return {
-            'overall_quality': np.mean([m['overall_score'] for m in self.quality_metrics.values()]),
+            'overall_quality': float(overall_quality),
             'source_quality': self.quality_metrics,
             'alerts': self._generate_alerts(),
             'timestamp': datetime.now().isoformat()

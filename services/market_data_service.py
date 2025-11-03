@@ -115,14 +115,14 @@ class MarketDataService:
             
             # 获取实时价格
             price_data = await jq_service._get_current_price(stock_code)
-            if not price_data:
+            if price_data is None or price_data.empty:
                 return None
             
             # 获取日线数据
             end_date = datetime.now().strftime('%Y-%m-%d')
             daily_data = await jq_service.get_daily_data(stock_code, end_date, end_date)
             
-            if daily_data and len(daily_data) > 0:
+            if not daily_data.empty and len(daily_data) > 0:
                 today = daily_data[0]
                 prev_close = today.get('close', 0)
                 current_price = price_data.get('price', prev_close)
@@ -206,7 +206,7 @@ class MarketDataService:
             end_date = datetime.now().strftime('%Y-%m-%d')
             daily_data = await jq_service.get_daily_data(index_code, end_date, end_date)
             
-            if daily_data and len(daily_data) > 0:
+            if not daily_data.empty and len(daily_data) > 0:
                 today = daily_data[0]
                 prev_close = today.get('close', 0)
                 current_value = today.get('close', prev_close)

@@ -97,7 +97,6 @@ frontend/
 - Python 3.9+
 - PostgreSQL 13+
 - Redis 6+
-- Node.js 16+
 
 ### 安装依赖
 

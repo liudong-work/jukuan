@@ -239,6 +239,36 @@
       "recommendations": [
         "投资组合表现良好，可以继续持有"
       ]
+    },
+    {
+      "timestamp": "2025-08-24 10:15:00.097436",
+      "portfolio_health": "健康",
+      "diversification_score": 0.7,
+      "risk_score": 0.4,
+      "opportunity_score": 0.6,
+      "rebalancing_needs": [],
+      "top_performers": [
+        "000001.XSHE"
+      ],
+      "underperformers": [],
+      "recommendations": [
+        "投资组合表现良好，可以继续持有"
+      ]
+    },
+    {
+      "timestamp": "2025-08-24 10:15:00.103995",
+      "portfolio_health": "健康",
+      "diversification_score": 0.7,
+      "risk_score": 0.4,
+      "opportunity_score": 0.6,
+      "rebalancing_needs": [],
+      "top_performers": [
+        "000001.XSHE"
+      ],
+      "underperformers": [],
+      "recommendations": [
+        "投资组合表现良好，可以继续持有"
+      ]
     }
   ]
 }
